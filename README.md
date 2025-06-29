@@ -144,20 +144,21 @@ Each project type configuration includes:
 * **Serial Number Prefixes**: Automatic S/N generation patterns.
 
 
+```
 src/
-|-- hooks/
-|   |-- api/
-|   |   |-- useProjectHooks.ts    // Hooks specifically for projects
-|   |   |-- useInventoryHooks.ts  // Hooks specifically for inventory
-|-- services/
-|   |-- api.ts                    // Central place for all axios API calls
-|-- store/
-|   |-- userStore.ts              // Zustand store for client-side state
-|-- types/
-|   |-- Project.ts
-|   |-- Inventory.ts
-|-- views/
-|   |-- dashboard/
-|   |   |-- ProjectsDashboardPage.tsx
-|-- main.tsx                      // Your application's entry point
-|-- App.tsx
+├── hooks/
+│   ├── api/
+│   │   ├── useProjectHooks.ts      // Hooks specifically for projects
+│   │   └── useInventoryHooks.ts    // Hooks specifically for inventory
+├── services/
+│   └── api.ts                      // Central place for all axios API calls
+├── store/
+│   └── userStore.ts                // Zustand store for client-side state
+├── types/
+│   ├── Project.ts
+│   └── Inventory.ts
+├── views/
+│   └── dashboard/
+│       └── ProjectsDashboardPage.tsx
+├── main.tsx                        // Your application's entry point
+└── A
