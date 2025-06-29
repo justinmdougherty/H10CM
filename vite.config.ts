@@ -88,8 +88,8 @@ export default defineConfig({
 server: {
   proxy: {
     '/api': {
-      //target: 'http://localhost:3000', //Use for at home
-      target: 'http://h10-websvr01.rdte.nswc.navy.mil:3000/', // Use for at work
+      target: 'http://localhost:3000', //Use for at home
+      //target: 'http://h10-websvr01.rdte.nswc.navy.mil:3000/', // Use for at work
       changeOrigin: true,
       secure: false,
     },

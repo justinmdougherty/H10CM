@@ -1,36 +1,31 @@
-// src/views/dashboard/ProjectsDashboardPage.tsx
 import {
   Typography,
   Box,
   Grid,
   Card,
   CardContent,
-  LinearProgress,
   Chip,
   CardActionArea,
-  CircularProgress, // For loading state
+  CircularProgress,
 } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
-import { Link } from 'react-router';
-import { Project } from 'src/types/Project'; // Adjust the import path as necessary
-import { useGetProjects } from 'src/hooks/useProjects'; // Import the custom hook
+import { Link } from 'react-router'; // Using react-router-dom is standard for modern React apps with Vite
+import { Project } from 'src/types/Project';
+import { useGetProjects } from 'src/hooks/useProjects';
 
-// Remove or comment out the static sampleProjects array and getStatusColor function if it's not used elsewhere
-// const sampleProjects: Project[] = [ ... ];
-
-const getStatusColor = (status: Project['status']): 'success' | 'warning' | 'error' | 'primary' => {
+const getStatusColor = (
+  status: Project['status'],
+): 'success' | 'warning' | 'primary' | 'default' => {
   switch (status) {
-    case 'On Track':
+    case 'Active':
       return 'primary';
+    case 'Development':
+      return 'warning';
     case 'Completed':
       return 'success';
-    case 'At Risk':
-      return 'warning';
-    case 'Delayed':
-      return 'error';
     default:
-      return 'primary';
+      return 'default';
   }
 };
 
@@ -66,49 +61,45 @@ const ProjectsDashboardPage = () => {
       <Breadcrumb title="Projects Dashboard" items={BCrumb} />
       <Box>
         <Grid container spacing={3}>
-          {projects?.map(
-            (
-              project, // Use projects from the hook (projects?)
-            ) => (
-              <Grid item xs={12} sm={6} md={4} key={project.id}>
+          {projects &&
+            projects.map((project) => (
+              // FIX: Use project.project_id for the key
+              <Grid item xs={12} sm={6} md={4} key={project.project_id}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <CardActionArea
                     component={Link}
-                    to={`/project/${project.id}`}
+                    // FIX: Use project.project_id for the link
+                    to={`/project/${project.project_id}`}
                     sx={{ flexGrow: 1 }}
                   >
                     <CardContent>
+                      {/* FIX: Use project.project_name */}
                       <Typography variant="h5" component="div" gutterBottom>
-                        {project.name}
+                        {project.project_name}
                       </Typography>
                       <Chip
                         label={project.status}
                         color={getStatusColor(project.status)}
                         size="small"
-                        sx={{ mb: 1 }}
+                        sx={{ mb: 2 }}
                       />
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        PO Qty: {project.productionOrderQty}
+                      {/* FIX: Use project.project_description */}
+                      <Typography variant="body2" color="text.secondary">
+                        {project.project_description}
                       </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                        <Box sx={{ width: '100%', mr: 1 }}>
-                          <LinearProgress variant="determinate" value={project.currentProgress} />
-                        </Box>
-                        <Box sx={{ minWidth: 35 }}>
-                          <Typography variant="body2" color="text.secondary">{`${Math.round(
-                            project.currentProgress,
-                          )}%`}</Typography>
-                        </Box>
-                      </Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Due Date: {new Date(project.dueDate).toLocaleDateString()}
+                      {/* FIX: Use project.last_modified */}
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ mt: 2, display: 'block' }}
+                      >
+                        Last Modified: {new Date(project.last_modified).toLocaleDateString()}
                       </Typography>
                     </CardContent>
                   </CardActionArea>
                 </Card>
               </Grid>
-            ),
-          )}
+            ))}
         </Grid>
       </Box>
     </PageContainer>

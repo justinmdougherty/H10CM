@@ -1,11 +1,8 @@
-// src/types/project.ts/ 
 export interface Project {
-  id: string;
-  name: string;
-  productionOrderQty: number;
-  currentProgress: number;
-  dueDate: string;
-  status: 'On Track' | 'At Risk' | 'Delayed' | 'Completed';
+  project_id: number;
+  project_name: string;
+  project_description: string;
+  status: string;
+  date_created: string;
+  last_modified: string;
 }
-
-// DO NOT define mockProjects array here.
