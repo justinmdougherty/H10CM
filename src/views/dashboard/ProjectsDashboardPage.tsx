@@ -12,7 +12,7 @@ import PageContainer from 'src/components/container/PageContainer';
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
 import { Link } from 'react-router'; // Using react-router-dom is standard for modern React apps with Vite
 import { Project } from 'src/types/Project';
-import { useGetProjects } from 'src/hooks/useProjects';
+import { useGetProjects } from 'src/hooks/api/useProjectHooks';
 
 const getStatusColor = (
   status: Project['status'],

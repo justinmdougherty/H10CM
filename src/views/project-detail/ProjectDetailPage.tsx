@@ -1,30 +1,29 @@
 import { Typography, Box, CircularProgress, Paper } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
-import { useParams } from 'react-router'; // Correct import for react-router
-import { useGetProjectById } from 'src/hooks/useProjects';
-
-// Import the BatchTrackingComponent if it exists and is needed
-// import BatchTrackingComponent from './BatchTrackingComponent';
+import { useParams } from 'react-router';
+import { useGetProjectById, useGetProjectSteps, useGetTrackedItems } from 'src/hooks/api/useProjectHooks';
+import BatchTrackingComponent from './BatchTrackingComponent';
 
 const ProjectDetailPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
-  const { data: project, isLoading, isError, error } = useGetProjectById(projectId);
+  const { data: project, isLoading: isLoadingProject, isError: isErrorProject, error: errorProject } = useGetProjectById(projectId);
+  const { data: steps, isLoading: isLoadingSteps, isError: isErrorSteps, error: errorSteps } = useGetProjectSteps(projectId);
+  const { data: trackedItems, isLoading: isLoadingTrackedItems, isError: isErrorTrackedItems, error: errorTrackedItems } = useGetTrackedItems(projectId);
 
-  // Dynamic Breadcrumb construction
   const BCrumb = [
     { to: '/', title: 'Home' },
-    { to: '/dashboard/projects', title: 'Projects Dashboard' },
+    { to: '/dashboard', title: 'Projects Dashboard' },
     {
-      title: isLoading
+      title: isLoadingProject
         ? 'Loading Project...'
         : project
-        ? project.project_name // Use project_name
+        ? project.project_name
         : projectId || 'Project Details',
     },
   ];
 
-  if (isLoading) {
+  if (isLoadingProject || isLoadingSteps || isLoadingTrackedItems) {
     return (
       <PageContainer title="Loading Project..." description="Loading project details">
         <Breadcrumb title="Loading..." items={BCrumb} />
@@ -35,12 +34,12 @@ const ProjectDetailPage = () => {
     );
   }
 
-  if (isError) {
+  if (isErrorProject || isErrorSteps || isErrorTrackedItems) {
     return (
       <PageContainer title="Error" description="Error loading project">
         <Breadcrumb title="Error" items={BCrumb} />
         <Typography color="error">
-          Error fetching project: {error?.message || 'An unknown error occurred'}
+          Error fetching project: {errorProject?.message || errorSteps?.message || errorTrackedItems?.message || 'An unknown error occurred'}
         </Typography>
       </PageContainer>
     );
@@ -59,13 +58,7 @@ const ProjectDetailPage = () => {
     );
   }
 
-  // --- Project Found - Display Details ---
-
-  // NOTE: The BatchTracking logic has been temporarily commented out to focus on the core data display.
-  // You can re-enable it once the main details are working correctly.
-  // const supportedBatchTypes = ['PR', 'ASSEMBLY'];
-  // const projectType = project.project_name;
-  // const hasBatchTracking = supportedBatchTypes.includes(projectType.toUpperCase());
+  const hasBatchTracking = project.project_type && ['PR', 'ASSEMBLY'].includes(project.project_type.toUpperCase());
 
   return (
     <PageContainer
@@ -92,19 +85,21 @@ const ProjectDetailPage = () => {
         </Typography>
       </Box>
 
-      {/* <Box mt={4}>
-        {!hasBatchTracking && (
+      <Box mt={4}>
+        {hasBatchTracking ? (
+          <BatchTrackingComponent
+            project={project}
+            steps={steps || []}
+            trackedItems={trackedItems || []}
+          />
+        ) : (
           <Paper sx={{ p: 2 }}>
             <Typography variant="body1">
               This project does not have batch tracking functionality enabled.
             </Typography>
           </Paper>
         )}
-        {hasBatchTracking && (
-           <BatchTrackingComponent projectId={project.project_id} projectType={projectType} />
-        )}
       </Box>
-      */}
     </PageContainer>
   );
 };

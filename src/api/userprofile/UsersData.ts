@@ -1,4 +1,4 @@
-import { sub } from 'date-fns';
+import { sub } from 'date-fns/sub';
 import user1 from 'src/assets/images/profile/user-1.jpg';
 import user2 from 'src/assets/images/profile/user-2.jpg';
 import user3 from 'src/assets/images/profile/user-3.jpg';

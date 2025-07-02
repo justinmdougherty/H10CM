@@ -8,7 +8,7 @@ import Cart from './Cart';
 import Search from './Search';
 import Language from './Language';
 
-import Navigation from './Navigation';
+// // import Navigation from './Navigation';
 import MobileRightSidebar from './MobileRightSidebar';
 import config from 'src/context/config';
 import { useContext } from 'react';

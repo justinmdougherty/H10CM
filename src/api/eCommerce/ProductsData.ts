@@ -1,4 +1,4 @@
-import { sub } from 'date-fns';
+import { sub } from 'date-fns/sub';
 import { Chance } from 'chance';
 import s1 from 'src/assets/images/products/s1.jpg';
 import s2 from 'src/assets/images/products/s2.jpg';

@@ -14,7 +14,7 @@ import figma from 'src/assets/images/chat/icon-figma.svg';
 import java from 'src/assets/images/chat/icon-javascript.svg';
 import zip from 'src/assets/images/chat/icon-zip-folder.svg';
 
-import { sub } from 'date-fns';
+import { sub } from 'date-fns/sub';
 import { http, HttpResponse } from 'msw';
 
 let EmailData: EmailType[] = [

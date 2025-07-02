@@ -11,7 +11,7 @@ import java from 'src/assets/images/chat/icon-javascript.svg';
 import zip from 'src/assets/images/chat/icon-zip-folder.svg';
 import { Chance } from 'chance';
 import type { ChatsType } from 'src/types/apps/chat';
-import { sub } from 'date-fns';
+import { sub } from 'date-fns/sub';
 import { uniqueId } from 'lodash';
 import { http, HttpResponse } from 'msw';
 

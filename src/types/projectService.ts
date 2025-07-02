@@ -1,17 +1,34 @@
-// src/services/projectService.ts
-import { Project } from 'src/types/Project'; // <--- IMPORT Project interface
+import { Project } from 'src/types/Project';
 
-// Define mockProjects here, using the imported Project type
 const mockProjects: Project[] = [
-  { id: 'pr001', name: 'PR', productionOrderQty: 48, currentProgress: 30, dueDate: '2025-07-15', status: 'On Track' },
-  { id: 'proj2', name: 'Project Beta', productionOrderQty: 75, currentProgress: 30, dueDate: '2025-08-01', status: 'At Risk' },
-  { id: 'proj3', name: 'Project Charlie', productionOrderQty: 200, currentProgress: 95, dueDate: '2025-06-20', status: 'On Track' },
-  { id: 'proj4', name: 'Project Delta', productionOrderQty: 100, currentProgress: 15, dueDate: '2025-09-10', status: 'Delayed' },
-  { id: 'proj5', name: 'Project Epsilon', productionOrderQty: 250, currentProgress: 70, dueDate: '2025-07-30', status: 'On Track' },
-  { id: 'proj6', name: 'Project Zeta', productionOrderQty: 50, currentProgress: 100, dueDate: '2025-05-30', status: 'Completed' },
+  {
+    project_id: 1,
+    project_name: 'PR',
+    project_description: 'Production Run Project',
+    project_type: 'PR',
+    status: 'Active',
+    date_created: '2024-01-01T10:00:00Z',
+    last_modified: '2024-06-20T14:30:00Z',
+  },
+  {
+    project_id: 2,
+    project_name: 'Assembly Line A',
+    project_description: 'Assembly of Product A',
+    project_type: 'ASSEMBLY',
+    status: 'Development',
+    date_created: '2024-02-15T09:00:00Z',
+    last_modified: '2024-06-18T11:00:00Z',
+  },
+  {
+    project_id: 3,
+    project_name: 'Quality Control B',
+    project_description: 'Quality checks for Product B',
+    project_type: 'QC',
+    status: 'Completed',
+    date_created: '2023-11-01T08:00:00Z',
+    last_modified: '2024-03-10T16:00:00Z',
+  },
 ];
-
-// DELETE any duplicate "interface Project { ... }" definition from this file.
 
 export const fetchProjectsAPI = async (): Promise<Project[]> => {
   console.log('Fetching projects (mock API in projectService)...');
@@ -20,9 +37,9 @@ export const fetchProjectsAPI = async (): Promise<Project[]> => {
 };
 
 export const fetchProjectByIdAPI = async (projectId: string): Promise<Project | undefined> => {
-    console.log(`Workspaceing project ${projectId} (mock API in projectService)...`);
+    console.log(`Fetching project ${projectId} (mock API in projectService)...`);
     await new Promise(resolve => setTimeout(resolve, 500));
-    const project = mockProjects.find(p => p.id === projectId);
+    const project = mockProjects.find(p => p.project_id.toString() === projectId);
     if (!project) {
         console.warn(`Mock API: Project with ID ${projectId} not found.`);
         return undefined;
@@ -30,32 +47,34 @@ export const fetchProjectByIdAPI = async (projectId: string): Promise<Project | 
     return project;
 };
 
-export const addProjectAPI = async (newProjectData: Omit<Project, 'id'>): Promise<Project> => {
+export const addProjectAPI = async (newProjectData: Omit<Project, 'project_id' | 'date_created' | 'last_modified'>): Promise<Project> => {
   console.log('Adding new project (mock API in projectService)...', newProjectData);
   await new Promise(resolve => setTimeout(resolve, 500));
   const newProject: Project = {
-    id: `proj${Math.floor(Math.random() * 1000) + 7}`,
+    project_id: mockProjects.length > 0 ? Math.max(...mockProjects.map(p => p.project_id)) + 1 : 1,
+    date_created: new Date().toISOString(),
+    last_modified: new Date().toISOString(),
     ...newProjectData,
   };
   mockProjects.push(newProject);
   return newProject;
 };
 
-export const updateProjectAPI = async (projectId: string, updatedProjectData: Partial<Omit<Project, 'id'>>): Promise<Project> => {
+export const updateProjectAPI = async (projectId: string, updatedProjectData: Partial<Omit<Project, 'project_id' | 'date_created'>>): Promise<Project> => {
   console.log(`Updating project ${projectId} (mock API in projectService)...`, updatedProjectData);
   await new Promise(resolve => setTimeout(resolve, 500));
-  const projectIndex = mockProjects.findIndex(p => p.id === projectId);
+  const projectIndex = mockProjects.findIndex(p => p.project_id.toString() === projectId);
   if (projectIndex === -1) {
     throw new Error(`Mock API: Project with ID ${projectId} not found for update.`);
   }
-  mockProjects[projectIndex] = { ...mockProjects[projectIndex], ...updatedProjectData };
+  mockProjects[projectIndex] = { ...mockProjects[projectIndex], ...updatedProjectData, last_modified: new Date().toISOString() };
   return mockProjects[projectIndex];
 };
 
 export const deleteProjectAPI = async (projectId: string): Promise<void> => {
   console.log(`Deleting project ${projectId} (mock API in projectService)...`);
   await new Promise(resolve => setTimeout(resolve, 500));
-  const projectIndex = mockProjects.findIndex(p => p.id === projectId);
+  const projectIndex = mockProjects.findIndex(p => p.project_id.toString() === projectId);
   if (projectIndex === -1) {
     throw new Error(`Mock API: Project with ID ${projectId} not found for deletion.`);
   }

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Project } from 'src/types/Project';
 import { InventoryItem } from 'src/types/Inventory';
+import { ProductionStep, ProductionUnit } from 'src/views/project-detail/BatchTrackingComponent';
 
 // The base URL will be handled by the Vite proxy you have set up
 const apiClient = axios.create({
@@ -27,6 +28,17 @@ export const fetchProjectById = async (projectId: string | undefined): Promise<P
   return data;
 };
 
+export const fetchProjectSteps = async (projectId: string | undefined): Promise<ProductionStep[]> => {
+  if (!projectId) return [];
+  const { data } = await apiClient.get(`/projects/${projectId}/steps`);
+  return data;
+};
+
+export const fetchTrackedItems = async (projectId: string | undefined): Promise<ProductionUnit[]> => {
+  if (!projectId) return [];
+  const { data } = await apiClient.get(`/projects/${projectId}/tracked-items`);
+  return data;
+};
 
 // --- Inventory API Functions (Example) ---
 export const fetchInventoryItems = async (): Promise<InventoryItem[]> => {

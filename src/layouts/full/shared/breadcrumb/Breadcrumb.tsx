@@ -4,7 +4,7 @@ import React from 'react';
 import { Grid2 as Grid, Typography, Box, Breadcrumbs, Link, Theme } from '@mui/material';
 import { NavLink } from 'react-router';
 
-import breadcrumbImg from 'src/assets/images/breadcrumb/ChatBc.png';
+// // import breadcrumbImg from 'src/assets/images/breadcrumb/ChatBc.png';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { IconCircle } from '@tabler/icons-react';

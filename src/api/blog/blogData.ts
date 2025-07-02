@@ -1,6 +1,6 @@
 import { Chance } from 'chance';
 import { random } from 'lodash';
-import { sub } from 'date-fns';
+import { sub } from 'date-fns/sub';
 import s1 from 'src/assets/images/blog/blog-img1.jpg';
 import s2 from 'src/assets/images/blog/blog-img2.jpg';
 import s3 from 'src/assets/images/blog/blog-img3.jpg';
