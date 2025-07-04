@@ -1,11 +1,27 @@
 export interface InventoryItem {
-    inventory_item_id: number;
-    item_name: string;
-    part_number: string | null; // Assuming part_number can be optional
-    description: string | null;   // Assuming description can be optional
-    unit_of_measure: string;
-    current_stock_level: number;
-    reorder_point: number | null; // Assuming reorder_point can be optional
-    supplier_info: string | null; // Assuming supplier_info can be optional
-    cost_per_unit: number | null;   // Assuming cost_per_unit can be optional
-  }
+  inventory_item_id: string;
+  name: string;
+  description?: string;
+  unit_of_measure: string;
+  current_stock: number;
+  reorder_point?: number;
+  last_updated?: string;
+}
+
+export interface InventoryAdjustment {
+  inventory_item_id: string;
+  adjustment_quantity: number;
+  adjustment_type: 'add' | 'subtract';
+  reason?: string;
+  adjusted_by_user_name?: string;
+}
+
+export interface InventoryTransaction {
+  transaction_id: string;
+  inventory_item_id: string;
+  transaction_type: 'in' | 'out' | 'adjustment';
+  quantity: number;
+  transaction_date: string;
+  related_entity_id?: string; // e.g., project_id, tracked_item_id
+  notes?: string;
+}

@@ -1,7 +1,10 @@
 import axios from 'axios';
 import { Project } from 'src/types/Project';
-import { InventoryItem } from 'src/types/Inventory';
-import { ProductionStep, ProductionUnit } from 'src/views/project-detail/BatchTrackingComponent';
+import { InventoryItem, InventoryAdjustment, InventoryTransaction } from 'src/types/Inventory';
+import { ProductionStep, ProductionUnit, UnitStepStatus } from 'src/views/project-detail/BatchTrackingComponent';
+import { AttributeDefinition } from 'src/types/AttributeDefinition'; // Assuming this type exists
+import { StepInventoryRequirement } from 'src/types/StepInventoryRequirement'; // Assuming this type exists
+import { TrackedItem, TrackedItemAttribute, TrackedItemStepProgress } from 'src/types/TrackedItem'; // Assuming these types exist
 
 // The base URL will be handled by the Vite proxy you have set up
 const apiClient = axios.create({
@@ -23,25 +26,159 @@ export const fetchProjectById = async (projectId: string | undefined): Promise<P
   const { data } = await apiClient.get(`/projects/${projectId}`);
   // APIs for a single item might return an array with one item
   if (Array.isArray(data) && data.length > 0) {
-    return data[0];
+    const projectData = data[0];
+    // Derive project_type based on project_name
+    let derivedProjectType = 'OTHER';
+    if (projectData.project_name === 'PR') {
+      derivedProjectType = 'PR';
+    } else if (projectData.project_name === 'Assembly Line A') {
+      derivedProjectType = 'ASSEMBLY';
+    }
+    return { ...projectData, project_type: derivedProjectType };
   }
+  return data;
+};
+
+export const createProject = async (project: Omit<Project, 'project_id' | 'date_created'>): Promise<Project> => {
+  const { data } = await apiClient.post('/projects', project);
+  return data;
+};
+
+export const updateProject = async (project: Project): Promise<Project> => {
+  const { data } = await apiClient.put(`/projects/${project.project_id}`, project);
   return data;
 };
 
 export const fetchProjectSteps = async (projectId: string | undefined): Promise<ProductionStep[]> => {
   if (!projectId) return [];
-  const { data } = await apiClient.get(`/projects/${projectId}/steps`);
+  const response = await apiClient.get(`/projects/${projectId}/steps`);
+  const apiData = response.data;
+  // Now, access the nested 'data' property which contains the array of steps
+  return Array.isArray(apiData.data) ? apiData.data : [];
+};
+
+export const createProjectStep = async (step: Omit<ProductionStep, 'step_id'>): Promise<ProductionStep> => {
+  const { data } = await apiClient.post('/steps', step);
   return data;
+};
+
+export const updateProjectStep = async (step: ProductionStep): Promise<ProductionStep> => {
+  const { data } = await apiClient.put(`/steps/${step.step_id}`, step);
+  return data;
+};
+
+export const deleteProjectStep = async (stepId: string): Promise<void> => {
+  await apiClient.delete(`/steps/${stepId}`);
 };
 
 export const fetchTrackedItems = async (projectId: string | undefined): Promise<ProductionUnit[]> => {
   if (!projectId) return [];
-  const { data } = await apiClient.get(`/projects/${projectId}/tracked-items`);
+  const response = await apiClient.get(`/projects/${projectId}/tracked-items`);
+  const data = response.data.data;
+  // Ensure data is an array, otherwise return an empty array
+  return Array.isArray(data) ? data : [];
+};
+
+export const fetchTrackedItemDetails = async (itemId: string): Promise<TrackedItem> => {
+  const { data } = await apiClient.get(`/tracked-items/${itemId}`);
   return data;
 };
 
-// --- Inventory API Functions (Example) ---
+export const createTrackedItem = async (item: Omit<TrackedItem, 'item_id' | 'date_created'>): Promise<TrackedItem> => {
+  const { data } = await apiClient.post('/tracked-items', item);
+  return data;
+};
+
+export const saveTrackedItemAttributes = async (itemId: string, attributes: TrackedItemAttribute[]): Promise<void> => {
+  await apiClient.post(`/tracked-items/${itemId}/attributes`, attributes);
+};
+
+export const updateTrackedItemStepProgress = async (itemId: string, stepId: string, progress: UnitStepStatus): Promise<void> => {
+  await apiClient.post(`/tracked-items/${itemId}/steps/${stepId}`, progress);
+};
+
+// --- Inventory API Functions ---
 export const fetchInventoryItems = async (): Promise<InventoryItem[]> => {
     const { data } = await apiClient.get('/inventory-items');
     return data;
+};
+
+export const fetchInventoryItemById = async (inventoryItemId: string): Promise<InventoryItem> => {
+  const { data } = await apiClient.get(`/inventory-items/${inventoryItemId}`);
+  return data;
+};
+
+export const createInventoryItem = async (item: Omit<InventoryItem, 'inventory_item_id'>): Promise<InventoryItem> => {
+  const { data } = await apiClient.post('/inventory-items', item);
+  return data;
+};
+
+export const updateInventoryItem = async (item: InventoryItem): Promise<InventoryItem> => {
+  const { data } = await apiClient.put(`/inventory-items/${item.inventory_item_id}`, item);
+  return data;
+};
+
+export const adjustInventoryStock = async (adjustment: InventoryAdjustment): Promise<void> => {
+  await apiClient.post('/inventory-items/adjust', adjustment);
+};
+
+export const fetchInventoryTransactions = async (inventoryItemId: string): Promise<InventoryTransaction[]> => {
+  const { data } = await apiClient.get(`/inventory-items/${inventoryItemId}/transactions`);
+  return data;
+};
+
+// --- Attribute Definition API Functions ---
+export const fetchProjectAttributes = async (projectId: string): Promise<AttributeDefinition[]> => {
+  const { data } = await apiClient.get(`/projects/${projectId}/attributes`);
+  return data;
+};
+
+export const createAttributeDefinition = async (attribute: Omit<AttributeDefinition, 'attribute_definition_id'>): Promise<AttributeDefinition> => {
+  const { data } = await apiClient.post('/attributes', attribute);
+  return data;
+};
+
+export const updateAttributeDefinition = async (attribute: AttributeDefinition): Promise<AttributeDefinition> => {
+  const { data } = await apiClient.put(`/attributes/${attribute.attribute_definition_id}`, attribute);
+  return data;
+};
+
+export const deleteAttributeDefinition = async (attributeId: string): Promise<void> => {
+  await apiClient.delete(`/attributes/${attributeId}`);
+};
+
+// --- Step Inventory Requirements API Functions ---
+export const fetchStepInventoryRequirements = async (stepId: string): Promise<StepInventoryRequirement[]> => {
+  const { data } = await apiClient.get(`/steps/${stepId}/inventory-requirements`);
+  return data;
+};
+
+export const createStepInventoryRequirement = async (requirement: Omit<StepInventoryRequirement, 'requirement_id'>): Promise<StepInventoryRequirement> => {
+  const { data } = await apiClient.post('/inventory-requirements', requirement);
+  return data;
+};
+
+export const updateStepInventoryRequirement = async (requirement: StepInventoryRequirement): Promise<StepInventoryRequirement> => {
+  const { data } = await apiClient.put(`/inventory-requirements/${requirement.requirement_id}`, requirement);
+  return data;
+};
+
+export const deleteStepInventoryRequirement = async (requirementId: string): Promise<void> => {
+  await apiClient.delete(`/inventory-requirements/${requirementId}`);
+};
+
+// --- View Endpoints API Functions ---
+export const fetchInventoryStockStatusView = async (): Promise<any[]> => {
+  const { data } = await apiClient.get('/views/inventory-stock-status');
+  return data;
+};
+
+export const fetchTrackedItemsOverviewView = async (): Promise<any[]> => {
+  const { data } = await apiClient.get('/views/tracked-items-overview');
+  return data;
+};
+
+export const fetchStepProgressStatusView = async (): Promise<any[]> => {
+  const { data } = await apiClient.get('/views/step-progress-status');
+  return data;
 };

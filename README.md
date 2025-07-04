@@ -16,10 +16,7 @@ This project was bootstrapped from the "Modernize - React and Next.js Admin Dash
 
     ```bash
     npm install
-    # or
-    # yarn install
-    # or
-    # pnpm install
+
     ```
 
 3. **Configure API Proxy:**
@@ -42,11 +39,7 @@ This project was bootstrapped from the "Modernize - React and Next.js Admin Dash
 4. **Run the development server:**
 
     ```bash
-    npm run dev
-    # or
-    # yarn dev
-    # or
-    # pnpm dev
+    npm run dev    
     ```
 
     The application will typically be available at `http://localhost:5173`.

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 import {
   Box,
   Grid,
@@ -26,52 +27,31 @@ import {
   DialogActions,
   TextField,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import { IconPlus, IconTruckDelivery } from '@tabler/icons-react';
 import certificateService from '../../services/certificateService';
 import { Project } from 'src/types/Project';
-
-// --- Generic Types for Batch Tracking System ---
-export type StepStatusType = 'Not Started' | 'In Progress' | 'Complete' | 'N/A';
-
-export interface ProductionStep {
-  step_id: string;
-  step_name: string;
-  step_order: number;
-}
-
-export interface UnitStepStatus {
-  stepId: string;
-  status: StepStatusType;
-  completedDate?: string;
-  completedBy?: string;
-}
-
-export interface ProductionUnit {
-  item_id: string;
-  unit_serial_number: string;
-  pcb_serial_number?: string;
-  step_statuses: UnitStepStatus[];
-  is_shipped?: boolean;
-  shipped_date?: string;
-  date_fully_completed?: string;
-  [key: string]: any;
-}
-
-export interface TableColumnConfig {
-  id: string;
-  label: string;
-  width?: string;
-  minWidth?: number;
-  tabs: string[];
-  render?: (unit: ProductionUnit, value: any) => React.ReactNode;
-}
+import {
+  ProductionStep,
+  UnitStepStatus,
+  ProductionUnit,
+  TableColumnConfig,
+  StepStatusType,
+} from 'src/types/Production';
+import { AttributeDefinition } from 'src/types/AttributeDefinition';
+import {
+  useTrackedItems,
+  useCreateTrackedItem,
+  useUpdateTrackedItemStepProgress,
+} from '../../hooks/api/useTrackedItemHooks';
+import { useProjectAttributes } from '../../hooks/api/useAttributeDefinitionHooks';
 
 // --- Helper Functions ---
-
-
 const isUnitComplete = (unit: ProductionUnit): boolean => {
-  return unit.step_statuses.every((ss) => ss.status === 'Complete' || ss.status === 'N/A');
+  return (
+    unit.step_statuses?.every((ss) => ss.status === 'Complete' || ss.status === 'N/A') ?? false
+  );
 };
 
 const getUnitOverallCompletionDate = (unit: ProductionUnit): string | undefined => {
@@ -79,7 +59,7 @@ const getUnitOverallCompletionDate = (unit: ProductionUnit): string | undefined 
     return undefined;
   }
   let latestDate: Date | undefined = undefined;
-  unit.step_statuses.forEach((ss) => {
+  unit.step_statuses?.forEach((ss) => {
     if (ss.status === 'Complete' && ss.completedDate) {
       const d = new Date(ss.completedDate);
       if (!latestDate || d > latestDate) {
@@ -98,76 +78,40 @@ const getUnitOverallCompletionDate = (unit: ProductionUnit): string | undefined 
 interface BatchTrackingComponentProps {
   project: Project;
   steps: ProductionStep[];
-  trackedItems: ProductionUnit[];
 }
 
 const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
   project,
   steps,
-  trackedItems,
 }) => {
-  // Derive config from project and steps
-  const config = useMemo(() => {
-    const baseConfig = {
-      projectType: project.project_type,
-      displayName: project.project_name,
-      steps: steps.map(s => ({ id: s.step_id, name: s.step_name, order: s.step_order })).sort((a, b) => a.order - b.order),
-      tableColumns: [
-        { id: 'unitSN', label: 'Unit S/N', width: '15%', tabs: ['inProgress', 'completed', 'shipped'] },
-        { id: 'pcbSN', label: 'PCB S/N', width: '15%', tabs: ['inProgress', 'completed', 'shipped'] },
-        { id: 'lastStepCompleted', label: 'Last Step', width: '20%', tabs: ['inProgress', 'completed', 'shipped'] },
-        { id: 'lastCompletedDate', label: 'Last Comp. Date', width: '15%', tabs: ['inProgress', 'completed', 'shipped'] },
-        { id: 'lastCompletedBy', label: 'Last Comp. By', width: '15%', tabs: ['inProgress', 'completed', 'shipped'] },
-        { id: 'dateCompleted', label: 'Full Comp. Date', width: '15%', tabs: ['completed', 'shipped'] },
-      ] as TableColumnConfig[],
-      unitFields: [
-        { key: 'unitSN', label: 'Unit S/N', type: 'text', required: true },
-        { key: 'pcbSN', label: 'PCB S/N', type: 'text' },
-      ],
-      snPrefix: {
-        unit: project.project_type === 'PR' ? 'PR-' : 'ASSY-',
-        pcb: project.project_type === 'PR' ? 'PCB-' : undefined,
-      },
-    };
+  const queryClient = useQueryClient();
 
-    // Add dynamic columns based on project attributes if needed in the future
-    return baseConfig;
-  }, [project, steps]);
+  const { data: trackedItems, isLoading, isError, error } = useTrackedItems(project.project_id.toString());
+  const { data: projectAttributes } = useProjectAttributes(project.project_id.toString());
+
+  const createTrackedItemMutation = useCreateTrackedItem();
+  const updateTrackedItemStepProgressMutation = useUpdateTrackedItemStepProgress();
+
+  // TODO: Implement a proper mutation for marking items as shipped
+  const markAsShippedMutation = useMutation<void, Error, string[]>({
+    mutationFn: async (itemIds: string[]) => {
+      // This is a placeholder. You'll need to implement an API call for this.
+      console.log('Marking as shipped:', itemIds);
+      // Example: await apiClient.post('/tracked-items/ship', { itemIds });
+      return Promise.resolve();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trackedItems'] });
+    },
+  });
 
   const todayYYYYMMDD = new Date().toISOString().split('T')[0];
   const oneWeekFromTodayYYYYMMDD = new Date(new Date().setDate(new Date().getDate() + 7))
     .toISOString()
     .split('T')[0];
 
-  const [batchData, setBatchData] = useState<{
-    id: string;
-    projectId: string;
-    batchName: string;
-    quantity: number;
-    units: ProductionUnit[];
-    batchStartDate?: string;
-    batchTargetCompletionDate?: string;
-  }>({
-    id: `batch_${project.project_id}`,
-    projectId: project.project_id.toString(),
-    batchName: project.project_name,
-    quantity: trackedItems.length,
-    units: trackedItems,
-    batchStartDate: project.date_created ? new Date(project.date_created).toISOString().split('T')[0] : todayYYYYMMDD,
-    batchTargetCompletionDate: oneWeekFromTodayYYYYMMDD, // This might come from project details later
-  });
-
-  useEffect(() => {
-    setBatchData(prev => ({
-      ...prev,
-      quantity: trackedItems.length,
-      units: trackedItems,
-      batchStartDate: project.date_created ? new Date(project.date_created).toISOString().split('T')[0] : todayYYYYMMDD,
-    }));
-  }, [trackedItems, project.date_created]);
-
   const [selectedUnits, setSelectedUnits] = useState<Record<string, boolean>>({});
-  const [currentStepIdToUpdate, setCurrentStepIdToUpdate] = useState<string>(config.steps[0]?.id || '');
+  const [currentStepIdToUpdate, setCurrentStepIdToUpdate] = useState<string>('');
   const [currentStatusToApply, setCurrentStatusToApply] = useState<StepStatusType>('Not Started');
   const [activeTab, setActiveTab] = useState(0);
   const [currentUserDisplayName, setCurrentUserDisplayName] = useState<string>('Loading User...');
@@ -180,9 +124,49 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
     quantity: 1,
     startUnitSN: '',
     startPcbSN: '',
-    batchStartDate: batchData.batchStartDate || todayYYYYMMDD,
-    batchTargetCompletionDate: batchData.batchTargetCompletionDate || oneWeekFromTodayYYYYMMDD,
+    batchStartDate: project.date_created
+      ? new Date(project.date_created).toISOString().split('T')[0]
+      : todayYYYYMMDD,
+    batchTargetCompletionDate: oneWeekFromTodayYYYYMMDD,
   });
+
+  // Derive config from project, steps, and attributes
+  const config = useMemo(() => {
+    const baseConfig = {
+      projectType: project.project_type,
+      displayName: project.project_name,
+      steps: steps
+        .map((s) => ({ id: s.step_id, name: s.step_name, order: s.step_order }))
+        .sort((a, b) => a.order - b.order),
+      unitFields: [
+        { key: 'unit_serial_number', label: 'Unit S/N', type: 'text', required: true },
+        { key: 'pcb_serial_number', label: 'PCB S/N', type: 'text' },
+      ],
+      snPrefix: {
+        unit: project.project_type === 'PR' ? 'PR-' : 'ASSY-',
+        pcb: project.project_type === 'PR' ? 'PCB-' : undefined,
+      },
+    };
+
+    const dynamicColumns: TableColumnConfig[] = (
+      projectAttributes || []
+    ).map((attr: AttributeDefinition) => ({
+      id: attr.attribute_name, // Use attribute name as ID
+      label: attr.attribute_name, // Use attribute name as label
+      width: '10%',
+      tabs: ['inProgress', 'completed', 'shipped'],
+      render: (unit: ProductionUnit) => {
+        const attributeValue = unit.attributes?.find(
+          (a: any) => a.attribute_definition_id === attr.attribute_definition_id,
+        )?.attribute_value;
+        return <TableCell>{attributeValue || '—'}</TableCell>;
+      },
+    }));
+
+    
+
+    return { ...baseConfig, tableColumns: [...dynamicColumns] };
+  }, [project, steps, projectAttributes]);
 
   useEffect(() => {
     if (config.steps.length > 0 && !currentStepIdToUpdate) {
@@ -212,7 +196,7 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
     const comp: ProductionUnit[] = [];
     const ship: ProductionUnit[] = [];
 
-    batchData.units.forEach((unit) => {
+    (trackedItems || []).forEach((unit) => {
       if (unit.is_shipped) {
         ship.push(unit);
       } else if (isUnitComplete(unit)) {
@@ -226,7 +210,7 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
       }
     });
     return { inProgressUnits: inProg, completedUnits: comp, shippedUnits: ship };
-  }, [batchData.units]);
+  }, [trackedItems]);
 
   const currentVisibleUnits = useMemo(() => {
     if (activeTab === 0) return inProgressUnits;
@@ -250,18 +234,20 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
   useEffect(() => {
     setAddUnitsForm((prev) => ({
       ...prev,
-      startUnitSN: `${config.snPrefix.unit}${String(batchData.units.length + 1).padStart(3, '0')}`,
+      startUnitSN: `${config.snPrefix.unit}${String((trackedItems?.length || 0) + 1).padStart(3, '0')}`,
       startPcbSN: config.snPrefix.pcb
-        ? `${config.snPrefix.pcb}${String(batchData.units.length + 1).padStart(3, '0')}`
+        ? `${config.snPrefix.pcb}${String((trackedItems?.length || 0) + 1).padStart(3, '0')}`
         : '',
-      batchStartDate: batchData.batchStartDate || todayYYYYMMDD,
-      batchTargetCompletionDate: batchData.batchTargetCompletionDate || oneWeekFromTodayYYYYMMDD,
+      batchStartDate: project.date_created
+        ? new Date(project.date_created).toISOString().split('T')[0]
+        : todayYYYYMMDD,
+      batchTargetCompletionDate: oneWeekFromTodayYYYYMMDD,
     }));
   }, [
-    batchData.units.length,
-    batchData.batchStartDate,
-    batchData.batchTargetCompletionDate,
-    config,
+    trackedItems?.length,
+    project.date_created,
+    config.snPrefix.unit,
+    config.snPrefix.pcb,
   ]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -284,52 +270,24 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
   };
 
   const handleApplyStatusToSelected = () => {
-    setBatchData((prevBatch) => {
-      const updatedUnits = prevBatch.units.map((unit) => {
-        let newUnitData = { ...unit };
-        if (selectedUnits[unit.item_id]) {
-          const newStepStatuses = newUnitData.step_statuses.map((ss) =>
-            ss.stepId === currentStepIdToUpdate
-              ? {
-                  ...ss,
-                  status: currentStatusToApply,
-                  completedDate:
-                    currentStatusToApply === 'Complete'
-                      ? new Date().toISOString()
-                      : ss.completedDate,
-                  completedBy:
-                    currentStatusToApply === 'Complete' ? currentUserDisplayName : ss.completedBy,
-                }
-              : ss,
-          );
-          newUnitData.step_statuses = newStepStatuses;
-
-          if (isUnitComplete(newUnitData) && !newUnitData.date_fully_completed) {
-            newUnitData.date_fully_completed = getUnitOverallCompletionDate(newUnitData);
-          } else if (!isUnitComplete(newUnitData)) {
-            newUnitData.date_fully_completed = undefined;
-          }
-        }
-        return newUnitData;
-      });
-      return { ...prevBatch, units: updatedUnits };
+    const selectedIds = Object.keys(selectedUnits).filter(id => selectedUnits[id]);
+    selectedIds.forEach(itemId => {
+        updateTrackedItemStepProgressMutation.mutate({ 
+            itemId, 
+            stepId: currentStepIdToUpdate, 
+            progress: { 
+                stepId: currentStepIdToUpdate,
+                status: currentStatusToApply, 
+                completedBy: currentStatusToApply === 'Complete' ? currentUserDisplayName : undefined,
+                completedDate: currentStatusToApply === 'Complete' ? new Date().toISOString() : undefined,
+            }
+        });
     });
   };
 
   const handleMarkAsShipped = () => {
-    setBatchData((prevBatch) => {
-      const updatedUnits = prevBatch.units.map((unit) => {
-        if (selectedUnits[unit.item_id] && isUnitComplete(unit) && !unit.is_shipped) {
-          return {
-            ...unit,
-            is_shipped: true,
-            shipped_date: new Date().toISOString(),
-          };
-        }
-        return unit;
-      });
-      return { ...prevBatch, units: updatedUnits };
-    });
+    const selectedIds = Object.keys(selectedUnits).filter(id => selectedUnits[id]);
+    markAsShippedMutation.mutate(selectedIds);
   };
 
   const getUnitLastCompletedStepInfo = (
@@ -340,31 +298,35 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
     let lastCompletedBy: string | undefined = undefined;
     let maxOrder = -1;
 
-    unit.step_statuses.forEach((statusEntry) => {
-      if (statusEntry.status === 'Complete') {
-        const stepDefinition = config.steps.find((s) => s.id === statusEntry.stepId);
-        if (stepDefinition && stepDefinition.order > maxOrder) {
-          maxOrder = stepDefinition.order;
-          lastCompletedStepName = stepDefinition.name;
-          lastCompletedDate = statusEntry.completedDate
-            ? new Date(statusEntry.completedDate).toLocaleDateString()
-            : undefined;
-          lastCompletedBy = statusEntry.completedBy;
+    if (unit.step_statuses && Array.isArray(unit.step_statuses)) {
+      unit.step_statuses.forEach((statusEntry) => {
+        if (statusEntry.status === 'Complete') {
+          const stepDefinition = config.steps.find((s) => s.id === statusEntry.stepId);
+          if (stepDefinition && stepDefinition.order > maxOrder) {
+            maxOrder = stepDefinition.order;
+            lastCompletedStepName = stepDefinition.name;
+            lastCompletedDate = statusEntry.completedDate
+              ? new Date(statusEntry.completedDate).toLocaleDateString()
+              : undefined;
+            lastCompletedBy = statusEntry.completedBy;
+          }
         }
-      }
-    });
+      });
+    }
     return { name: lastCompletedStepName, date: lastCompletedDate, completedBy: lastCompletedBy };
   };
 
   const handleOpenAddModal = () => {
     setAddUnitsForm({
       quantity: 1,
-      startUnitSN: `${config.snPrefix.unit}${String(batchData.units.length + 1).padStart(3, '0')}`,
+      startUnitSN: `${config.snPrefix.unit}${String((trackedItems?.length || 0) + 1).padStart(3, '0')}`,
       startPcbSN: config.snPrefix.pcb
-        ? `${config.snPrefix.pcb}${String(batchData.units.length + 1).padStart(3, '0')}`
+        ? `${config.snPrefix.pcb}${String((trackedItems?.length || 0) + 1).padStart(3, '0')}`
         : '',
-      batchStartDate: batchData.batchStartDate || todayYYYYMMDD,
-      batchTargetCompletionDate: batchData.batchTargetCompletionDate || oneWeekFromTodayYYYYMMDD,
+      batchStartDate: project.date_created
+        ? new Date(project.date_created).toISOString().split('T')[0]
+        : todayYYYYMMDD,
+      batchTargetCompletionDate: oneWeekFromTodayYYYYMMDD,
     });
     setIsAddModalOpen(true);
   };
@@ -383,7 +345,9 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
 
   const handlePreviousUnit = () => {
     if (!selectedUnitForDetail) return;
-    const currentIndex = currentVisibleUnits.findIndex((u) => u.item_id === selectedUnitForDetail.item_id);
+    const currentIndex = currentVisibleUnits.findIndex(
+      (u) => u.item_id === selectedUnitForDetail.item_id,
+    );
     if (currentIndex > 0) {
       setSelectedUnitForDetail(currentVisibleUnits[currentIndex - 1]);
     }
@@ -391,7 +355,9 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
 
   const handleNextUnit = () => {
     if (!selectedUnitForDetail) return;
-    const currentIndex = currentVisibleUnits.findIndex((u) => u.item_id === selectedUnitForDetail.item_id);
+    const currentIndex = currentVisibleUnits.findIndex(
+      (u) => u.item_id === selectedUnitForDetail.item_id,
+    );
     if (currentIndex < currentVisibleUnits.length - 1) {
       setSelectedUnitForDetail(currentVisibleUnits[currentIndex + 1]);
     }
@@ -399,7 +365,9 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
 
   const getCurrentUnitPosition = () => {
     if (!selectedUnitForDetail) return { current: 0, total: 0 };
-    const currentIndex = currentVisibleUnits.findIndex((u) => u.item_id === selectedUnitForDetail.item_id);
+    const currentIndex = currentVisibleUnits.findIndex(
+      (u) => u.item_id === selectedUnitForDetail.item_id,
+    );
     return {
       current: currentIndex + 1,
       total: currentVisibleUnits.length,
@@ -415,31 +383,22 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
   };
 
   const handleAddNewUnits = () => {
-    if (addUnitsForm.quantity <= 0 && addUnitsForm.quantity !== null) {
-      alert('Quantity must be greater than 0 if adding units.');
+    if (addUnitsForm.quantity <= 0) {
+      alert('Quantity must be greater than 0.');
+      return;
     }
-    // This part needs to be implemented to call the API to create new tracked items
-    // For now, it will just add to the local state (which will be overwritten on refresh)
-    const newUnits: ProductionUnit[] = []; // Placeholder for new units from API
 
-    setBatchData((prevBatch) => {
-      const combinedUnits = [...prevBatch.units, ...newUnits];
-      const newSelectedState = { ...selectedUnits };
-      if (newUnits.length > 0 && (activeTab === 0 || activeTab === 1)) {
-        newUnits.forEach((unit) => {
-          newSelectedState[unit.item_id] = true;
+    const currentTrackedItemsCount = trackedItems?.length || 0;
+    for (let i = 0; i < addUnitsForm.quantity; i++) {
+        const unitSN = `${config.snPrefix.unit}${String(currentTrackedItemsCount + i + 1).padStart(3, '0')}`;
+        const pcbSN = config.snPrefix.pcb ? `${config.snPrefix.pcb}${String(currentTrackedItemsCount + i + 1).padStart(3, '0')}` : undefined;
+        
+        createTrackedItemMutation.mutate({ 
+            project_id: project.project_id.toString(), 
+            unit_serial_number: unitSN, 
+            pcb_serial_number: pcbSN 
         });
-      }
-
-      setSelectedUnits(newSelectedState);
-      return {
-        ...prevBatch,
-        units: combinedUnits,
-        quantity: prevBatch.quantity + newUnits.length,
-        batchStartDate: addUnitsForm.batchStartDate,
-        batchTargetCompletionDate: addUnitsForm.batchTargetCompletionDate,
-      };
-    });
+    }
     handleCloseAddModal();
   };
 
@@ -478,10 +437,17 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
   };
 
   const renderTableCellContent = (unit: ProductionUnit, column: TableColumnConfig) => {
+    const attribute = projectAttributes?.find(attr => attr.attribute_name === column.id);
+    if (attribute) {
+      const attributeValue = unit.attributes?.find(a => a.attribute_definition_id === attribute.attribute_definition_id)?.attribute_value;
+      return <TableCell>{attributeValue || '—'}</TableCell>;
+    }
+
+    // Handle standard fields that are always present
     switch (column.id) {
-      case 'unitSN':
-        return <TableCell sx={{ fontWeight: 500 }}>{unit.unit_serial_number}</TableCell>;
-      case 'pcbSN':
+      case 'unit_serial_number':
+        return <TableCell sx={{ fontWeight: 500 }}>{unit.unit_serial_number || '—'}</TableCell>;
+      case 'pcb_serial_number':
         return <TableCell>{unit.pcb_serial_number || '—'}</TableCell>;
       case 'lastStepCompleted':
         const lastStepInfo = getUnitLastCompletedStepInfo(unit);
@@ -492,7 +458,7 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
       case 'lastCompletedBy':
         const lastStepInfo3 = getUnitLastCompletedStepInfo(unit);
         return <TableCell>{lastStepInfo3.completedBy || '—'}</TableCell>;
-      case 'dateCompleted':
+      case 'date_fully_completed':
         return (
           <TableCell>
             {unit.date_fully_completed
@@ -506,6 +472,9 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
   };
 
   const currentTabName = activeTab === 0 ? 'inProgress' : activeTab === 1 ? 'completed' : 'shipped';
+
+  if (isLoading) return <CircularProgress />;
+  if (isError) return <Typography color="error">Error: {error.message}</Typography>;
 
   return (
     <Paper sx={{ p: 3, width: '100%' }}>
@@ -534,11 +503,11 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
         }}
       >
         <Typography variant="body1" component="span">
-          Batch Start: <strong>{formatDateForDisplay(batchData.batchStartDate)}</strong>
+          Batch Start: <strong>{formatDateForDisplay(addUnitsForm.batchStartDate)}</strong>
         </Typography>
         <Typography variant="body1" component="span">
           Target Completion:{' '}
-          <strong>{formatDateForDisplay(batchData.batchTargetCompletionDate)}</strong>
+          <strong>{formatDateForDisplay(addUnitsForm.batchTargetCompletionDate)}</strong>
         </Typography>
       </Box>
 
@@ -646,7 +615,11 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
                             currentTabName as 'inProgress' | 'completed' | 'shipped',
                           ),
                         )
-                        .map((column) => renderTableCellContent(unit, column))}
+                        .map((column) => (
+                          <React.Fragment key={column.id}>
+                            {renderTableCellContent(unit, column)}
+                          </React.Fragment>
+                        ))}
                     </TableRow>
                   );
                 })}
@@ -746,8 +719,8 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
                   .slice(0, 5)
                   .map((unit) => {
                     const currentStepStatus =
-                      unit.step_statuses.find((ss) => ss.stepId === currentStepIdToUpdate)?.status ||
-                      'N/A';
+                      unit.step_statuses?.find((ss) => ss.stepId === currentStepIdToUpdate)
+                        ?.status || 'N/A';
                     return (
                       <Typography
                         key={unit.item_id}
@@ -765,9 +738,7 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
                     display="block"
                     sx={{ fontSize: '0.85rem', fontStyle: 'italic' }}
                   >
-                    ...and{' '}
-                    {numberOfSelectedUnitsInCurrentTab - 5}{' '}
-                    more units.
+                    ...and {numberOfSelectedUnitsInCurrentTab - 5} more units.
                   </Typography>
                 )}
               </Box>
@@ -801,7 +772,7 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
             margin="normal"
             name="startUnitSN"
             label={`Starting ${
-              config.unitFields.find((f) => f.key === 'unitSN')?.label || 'Unit S/N'
+              config.unitFields.find((f) => f.key === 'unit_serial_number')?.label || 'Unit S/N'
             }`}
             type="text"
             fullWidth
@@ -818,7 +789,7 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
               margin="normal"
               name="startPcbSN"
               label={`Starting ${
-                config.unitFields.find((f) => f.key === 'pcbSN')?.label || 'PCB S/N'
+                config.unitFields.find((f) => f.key === 'pcb_serial_number')?.label || 'PCB S/N'
               }`}
               type="text"
               fullWidth
@@ -900,7 +871,9 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
               onClick={handlePreviousUnit}
               disabled={
                 !selectedUnitForDetail ||
-                currentVisibleUnits.findIndex((u) => u.item_id === selectedUnitForDetail.item_id) === 0
+                currentVisibleUnits.findIndex(
+                  (u) => u.item_id === selectedUnitForDetail.item_id,
+                ) === 0
               }
               size="small"
             >
@@ -911,7 +884,9 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
               onClick={handleNextUnit}
               disabled={
                 !selectedUnitForDetail ||
-                currentVisibleUnits.findIndex((u) => u.item_id === selectedUnitForDetail.item_id) ===
+                currentVisibleUnits.findIndex(
+                  (u) => u.item_id === selectedUnitForDetail.item_id,
+                ) ===
                   currentVisibleUnits.length - 1
               }
               size="small"
@@ -947,6 +922,17 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
                       : 'Yes'}
                   </Typography>
                 )}
+                {/* Render dynamic attributes in detail modal */}
+                {projectAttributes?.map((attr) => {
+                  const attributeValue = selectedUnitForDetail.attributes?.find(
+                    (a: any) => a.attribute_definition_id === attr.attribute_definition_id,
+                  )?.attribute_value;
+                  return attributeValue ? (
+                    <Typography variant="body1" key={attr.attribute_definition_id}>
+                      <strong>{attr.attribute_name}:</strong> {attributeValue}
+                    </Typography>
+                  ) : null;
+                })}
               </Box>
 
               <Typography variant="h6" gutterBottom>
@@ -965,7 +951,7 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
                   </TableHead>
                   <TableBody>
                     {config.steps.map((step) => {
-                      const stepStatus = selectedUnitForDetail.step_statuses.find(
+                      const stepStatus = selectedUnitForDetail.step_statuses?.find(
                         (ss) => ss.stepId === step.id,
                       );
                       const status = stepStatus?.status || 'Not Started';
@@ -1037,7 +1023,7 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
                   </Typography>
                   {config.steps
                     .filter((step) => {
-                      const stepStatus = selectedUnitForDetail.step_statuses.find(
+                      const stepStatus = selectedUnitForDetail.step_statuses?.find(
                         (ss) => ss.stepId === step.id,
                       );
                       return stepStatus?.status === 'Not Started';
@@ -1049,7 +1035,7 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
                       </Typography>
                     ))}
                   {config.steps.filter((step) => {
-                    const stepStatus = selectedUnitForDetail.step_statuses.find(
+                    const stepStatus = selectedUnitForDetail.step_statuses?.find(
                       (ss) => ss.stepId === step.id,
                     );
                     return stepStatus?.status === 'Not Started';
@@ -1057,7 +1043,7 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
                     <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
                       ...and{' '}
                       {config.steps.filter((step) => {
-                        const stepStatus = selectedUnitForDetail.step_statuses.find(
+                        const stepStatus = selectedUnitForDetail.step_statuses?.find(
                           (ss) => ss.stepId === step.id,
                         );
                         return stepStatus?.status === 'Not Started';
@@ -1077,7 +1063,9 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
               onClick={handlePreviousUnit}
               disabled={
                 !selectedUnitForDetail ||
-                currentVisibleUnits.findIndex((u) => u.item_id === selectedUnitForDetail.item_id) === 0
+                currentVisibleUnits.findIndex(
+                  (u) => u.item_id === selectedUnitForDetail.item_id,
+                ) === 0
               }
               size="large"
               sx={{ fontSize: '1rem' }}
@@ -1089,7 +1077,9 @@ const BatchTrackingComponent: React.FC<BatchTrackingComponentProps> = ({
               onClick={handleNextUnit}
               disabled={
                 !selectedUnitForDetail ||
-                currentVisibleUnits.findIndex((u) => u.item_id === selectedUnitForDetail.item_id) ===
+                currentVisibleUnits.findIndex(
+                  (u) => u.item_id === selectedUnitForDetail.item_id,
+                ) ===
                   currentVisibleUnits.length - 1
               }
               size="large"

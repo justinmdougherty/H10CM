@@ -1,15 +1,34 @@
-import { Typography, Box, CircularProgress, Paper } from '@mui/material';
+import { Typography, Box, CircularProgress } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
 import { useParams } from 'react-router';
-import { useGetProjectById, useGetProjectSteps, useGetTrackedItems } from 'src/hooks/api/useProjectHooks';
+import {
+  useGetProjectById,
+  useGetProjectSteps,
+  useGetTrackedItems,
+} from 'src/hooks/api/useProjectHooks';
 import BatchTrackingComponent from './BatchTrackingComponent';
 
 const ProjectDetailPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
-  const { data: project, isLoading: isLoadingProject, isError: isErrorProject, error: errorProject } = useGetProjectById(projectId);
-  const { data: steps, isLoading: isLoadingSteps, isError: isErrorSteps, error: errorSteps } = useGetProjectSteps(projectId);
-  const { data: trackedItems, isLoading: isLoadingTrackedItems, isError: isErrorTrackedItems, error: errorTrackedItems } = useGetTrackedItems(projectId);
+  const {
+    data: project,
+    isLoading: isLoadingProject,
+    isError: isErrorProject,
+    error: errorProject,
+  } = useGetProjectById(projectId);
+  const {
+    data: steps,
+    isLoading: isLoadingSteps,
+    isError: isErrorSteps,
+    error: errorSteps,
+  } = useGetProjectSteps(projectId);
+  const {
+    data: trackedItems,
+    isLoading: isLoadingTrackedItems,
+    isError: isErrorTrackedItems,
+    error: errorTrackedItems,
+  } = useGetTrackedItems(projectId);
 
   const BCrumb = [
     { to: '/', title: 'Home' },
@@ -39,7 +58,11 @@ const ProjectDetailPage = () => {
       <PageContainer title="Error" description="Error loading project">
         <Breadcrumb title="Error" items={BCrumb} />
         <Typography color="error">
-          Error fetching project: {errorProject?.message || errorSteps?.message || errorTrackedItems?.message || 'An unknown error occurred'}
+          Error fetching project:{' '}
+          {errorProject?.message ||
+            errorSteps?.message ||
+            errorTrackedItems?.message ||
+            'An unknown error occurred'}
         </Typography>
       </PageContainer>
     );
@@ -57,8 +80,6 @@ const ProjectDetailPage = () => {
       </PageContainer>
     );
   }
-
-  const hasBatchTracking = project.project_type && ['PR', 'ASSEMBLY'].includes(project.project_type.toUpperCase());
 
   return (
     <PageContainer
@@ -86,19 +107,10 @@ const ProjectDetailPage = () => {
       </Box>
 
       <Box mt={4}>
-        {hasBatchTracking ? (
-          <BatchTrackingComponent
-            project={project}
-            steps={steps || []}
-            trackedItems={trackedItems || []}
-          />
-        ) : (
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="body1">
-              This project does not have batch tracking functionality enabled.
-            </Typography>
-          </Paper>
-        )}
+        <BatchTrackingComponent
+          project={project}
+          steps={steps || []}
+        />
       </Box>
     </PageContainer>
   );

@@ -45,6 +45,7 @@
     "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@tanstack/react-query-devtools": "^5.81.5",
     "@types/chance": "^1.1.7",
     "@types/date-fns": "^2.5.3",
     "@types/node": "22.10.1",
