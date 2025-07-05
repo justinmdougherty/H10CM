@@ -8,10 +8,11 @@ import {
 } from '../../services/api';
 import { InventoryItem } from '../../types/Inventory';
 
-export const useGetInventoryByProject = (projectId: number) => {
+export const useGetInventoryByProject = (projectId: number, options?: { enabled?: boolean }) => {
   return useQuery<InventoryItem[], Error>({
     queryKey: ['inventory', projectId],
     queryFn: () => getInventoryByProject(projectId),
+    enabled: options?.enabled,
   });
 };
 
@@ -24,7 +25,7 @@ export const useGetAllInventory = () => {
 
 export const useAddInventoryItem = () => {
   const queryClient = useQueryClient();
-  return useMutation<InventoryItem, Error, Omit<InventoryItem, 'id'>>({
+  return useMutation<InventoryItem, Error, Omit<InventoryItem, 'inventory_item_id'>>({
     mutationFn: addInventoryItem,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
