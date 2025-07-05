@@ -1,11 +1,12 @@
 export interface InventoryItem {
-  inventory_item_id: string;
-  name: string;
+  inventory_item_id: number;
+  item_name: string;
+  part_number: string;
   description?: string;
   unit_of_measure: string;
-  current_stock: number;
+  current_stock_level: number;
   reorder_point?: number;
-  last_updated?: string;
+  project_id?: number; // For client-side filtering, not always in API response
 }
 
 export interface InventoryAdjustment {

@@ -1,10 +1,11 @@
 import axios from 'axios';
 import { Project } from 'src/types/Project';
 import { InventoryItem, InventoryAdjustment, InventoryTransaction } from 'src/types/Inventory';
-import { ProductionStep, ProductionUnit, UnitStepStatus } from 'src/views/project-detail/BatchTrackingComponent';
+import { ProductionUnit, UnitStepStatus } from 'src/types/Production';
+import { ProjectStep } from 'src/types/ProjectSteps';
 import { AttributeDefinition } from 'src/types/AttributeDefinition'; // Assuming this type exists
 import { StepInventoryRequirement } from 'src/types/StepInventoryRequirement'; // Assuming this type exists
-import { TrackedItem, TrackedItemAttribute, TrackedItemStepProgress } from 'src/types/TrackedItem'; // Assuming these types exist
+import { TrackedItem, TrackedItemAttribute } from 'src/types/TrackedItem';
 
 // The base URL will be handled by the Vite proxy you have set up
 const apiClient = axios.create({
@@ -49,7 +50,7 @@ export const updateProject = async (project: Project): Promise<Project> => {
   return data;
 };
 
-export const fetchProjectSteps = async (projectId: string | undefined): Promise<ProductionStep[]> => {
+export const fetchProjectSteps = async (projectId: string | undefined): Promise<ProjectStep[]> => {
   if (!projectId) return [];
   const response = await apiClient.get(`/projects/${projectId}/steps`);
   const apiData = response.data;
@@ -57,12 +58,12 @@ export const fetchProjectSteps = async (projectId: string | undefined): Promise<
   return Array.isArray(apiData.data) ? apiData.data : [];
 };
 
-export const createProjectStep = async (step: Omit<ProductionStep, 'step_id'>): Promise<ProductionStep> => {
+export const createProjectStep = async (step: Omit<ProjectStep, 'step_id'>): Promise<ProjectStep> => {
   const { data } = await apiClient.post('/steps', step);
   return data;
 };
 
-export const updateProjectStep = async (step: ProductionStep): Promise<ProductionStep> => {
+export const updateProjectStep = async (step: ProjectStep): Promise<ProjectStep> => {
   const { data } = await apiClient.put(`/steps/${step.step_id}`, step);
   return data;
 };
@@ -73,8 +74,11 @@ export const deleteProjectStep = async (stepId: string): Promise<void> => {
 
 export const fetchTrackedItems = async (projectId: string | undefined): Promise<ProductionUnit[]> => {
   if (!projectId) return [];
+  console.log('Fetching tracked items for project:', projectId);
   const response = await apiClient.get(`/projects/${projectId}/tracked-items`);
+  console.log('API response:', response.data);
   const data = response.data.data;
+  console.log('Extracted data:', data);
   // Ensure data is an array, otherwise return an empty array
   return Array.isArray(data) ? data : [];
 };
@@ -94,7 +98,7 @@ export const saveTrackedItemAttributes = async (itemId: string, attributes: Trac
 };
 
 export const updateTrackedItemStepProgress = async (itemId: string, stepId: string, progress: UnitStepStatus): Promise<void> => {
-  await apiClient.post(`/tracked-items/${itemId}/steps/${stepId}`, progress);
+  await apiClient.put(`/tracked-items/${itemId}/steps/${stepId}`, { status: progress.status, start_time: progress.start_time, end_time: progress.end_time });
 };
 
 // --- Inventory API Functions ---
@@ -127,10 +131,30 @@ export const fetchInventoryTransactions = async (inventoryItemId: string): Promi
   return data;
 };
 
+export const getInventoryByProject = async (projectId: number): Promise<InventoryItem[]> => {
+  const { data } = await apiClient.get(`/inventory/project/${projectId}`);
+  return data;
+};
+
+export const getAllInventory = async (): Promise<InventoryItem[]> => {
+  const response = await apiClient.get('/inventory-items');
+  return response.data.data; // Extract data from the nested data property
+};
+
+export const addInventoryItem = async (newItem: Omit<InventoryItem, 'inventory_item_id'>): Promise<InventoryItem> => {
+  const { data } = await apiClient.post('/inventory-items', newItem);
+  return data;
+};
+
+export const deleteInventoryItem = async (id: number): Promise<void> => {
+  await apiClient.delete(`/inventory-items/${id}`);
+};
+
 // --- Attribute Definition API Functions ---
 export const fetchProjectAttributes = async (projectId: string): Promise<AttributeDefinition[]> => {
   const { data } = await apiClient.get(`/projects/${projectId}/attributes`);
-  return data;
+  // Handle both direct array and { data: array } response formats
+  return Array.isArray(data) ? data : (data.data || []);
 };
 
 export const createAttributeDefinition = async (attribute: Omit<AttributeDefinition, 'attribute_definition_id'>): Promise<AttributeDefinition> => {

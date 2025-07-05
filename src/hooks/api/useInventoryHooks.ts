@@ -1,35 +1,33 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  fetchInventoryItems,
-  fetchInventoryItemById,
-  createInventoryItem,
+  getAllInventory,
+  getInventoryByProject,
+  addInventoryItem,
   updateInventoryItem,
-  adjustInventoryStock,
-  fetchInventoryTransactions,
+  deleteInventoryItem,
 } from '../../services/api';
-import { InventoryItem, InventoryAdjustment, InventoryTransaction } from '../../types/Inventory';
+import { InventoryItem } from '../../types/Inventory';
 
-export const useInventoryItems = () => {
+export const useGetInventoryByProject = (projectId: number) => {
   return useQuery<InventoryItem[], Error>({
-    queryKey: ['inventoryItems'],
-    queryFn: fetchInventoryItems,
+    queryKey: ['inventory', projectId],
+    queryFn: () => getInventoryByProject(projectId),
   });
 };
 
-export const useInventoryItemDetails = (inventoryItemId: string | undefined) => {
-  return useQuery<InventoryItem, Error>({
-    queryKey: ['inventoryItem', inventoryItemId],
-    queryFn: () => fetchInventoryItemById(inventoryItemId as string),
-    enabled: !!inventoryItemId,
+export const useGetAllInventory = () => {
+  return useQuery<InventoryItem[], Error>({
+    queryKey: ['inventory'],
+    queryFn: getAllInventory,
   });
 };
 
-export const useCreateInventoryItem = () => {
+export const useAddInventoryItem = () => {
   const queryClient = useQueryClient();
-  return useMutation<InventoryItem, Error, Omit<InventoryItem, 'inventory_item_id'>>({
-    mutationFn: createInventoryItem,
+  return useMutation<InventoryItem, Error, Omit<InventoryItem, 'id'>>({
+    mutationFn: addInventoryItem,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['inventoryItems'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
     },
   });
 };
@@ -38,29 +36,21 @@ export const useUpdateInventoryItem = () => {
   const queryClient = useQueryClient();
   return useMutation<InventoryItem, Error, InventoryItem>({
     mutationFn: updateInventoryItem,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['inventoryItems'] });
-      queryClient.invalidateQueries({ queryKey: ['inventoryItem', data.inventory_item_id] });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      if (variables.project_id) {
+        queryClient.invalidateQueries({ queryKey: ['inventory', variables.project_id] });
+      }
     },
   });
 };
 
-export const useAdjustInventoryStock = () => {
+export const useDeleteInventoryItem = () => {
   const queryClient = useQueryClient();
-  return useMutation<void, Error, InventoryAdjustment>({
-    mutationFn: adjustInventoryStock,
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['inventoryItems'] });
-      queryClient.invalidateQueries({ queryKey: ['inventoryItem', variables.inventory_item_id] });
-      queryClient.invalidateQueries({ queryKey: ['inventoryTransactions', variables.inventory_item_id] });
+  return useMutation<void, Error, number>({
+    mutationFn: deleteInventoryItem,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
     },
-  });
-};
-
-export const useInventoryTransactions = (inventoryItemId: string | undefined) => {
-  return useQuery<InventoryTransaction[], Error>({
-    queryKey: ['inventoryTransactions', inventoryItemId],
-    queryFn: () => fetchInventoryTransactions(inventoryItemId as string),
-    enabled: !!inventoryItemId,
   });
 };

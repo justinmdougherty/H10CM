@@ -7,7 +7,7 @@ import {
   updateTrackedItemStepProgress,
 } from '../../services/api';
 import { TrackedItem, TrackedItemAttribute, TrackedItemStepProgress } from '../../types/TrackedItem';
-import { ProductionUnit } from '../../views/project-detail/BatchTrackingComponent';
+import { ProductionUnit } from '../../types/Production';
 
 export const useTrackedItems = (projectId: string | undefined) => {
   return useQuery<ProductionUnit[], Error>({
@@ -27,7 +27,7 @@ export const useTrackedItemDetails = (itemId: string | undefined) => {
 
 export const useCreateTrackedItem = () => {
   const queryClient = useQueryClient();
-  return useMutation<TrackedItem, Error, Omit<TrackedItem, 'item_id' | 'date_created' | 'is_shipped' | 'shipped_date' | 'date_fully_completed'>>({
+  return useMutation<TrackedItem, Error, Omit<TrackedItem, 'item_id' | 'date_created'>>({
     mutationFn: createTrackedItem,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['trackedItems', data.project_id.toString()] });
@@ -37,22 +37,43 @@ export const useCreateTrackedItem = () => {
 
 export const useSaveTrackedItemAttributes = () => {
   const queryClient = useQueryClient();
-  return useMutation<void, Error, { itemId: string; attributes: TrackedItemAttribute[] }>({
+  return useMutation<
+    void,
+    Error,
+    { itemId: string; attributes: TrackedItemAttribute[]; projectId: string }
+  >({
     mutationFn: ({ itemId, attributes }) => saveTrackedItemAttributes(itemId, attributes),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
+      // Invalidate both the main list and the specific item details
+      queryClient.invalidateQueries({ queryKey: ['trackedItems', variables.projectId] });
       queryClient.invalidateQueries({ queryKey: ['trackedItemDetails', variables.itemId] });
-      // Potentially invalidate trackedItems list if attributes affect list view
     },
   });
 };
 
 export const useUpdateTrackedItemStepProgress = () => {
   const queryClient = useQueryClient();
-  return useMutation<void, Error, { itemId: string; stepId: string; progress: TrackedItemStepProgress }>({
-    mutationFn: ({ itemId, stepId, progress }) => updateTrackedItemStepProgress(itemId, stepId, progress),
-    onSuccess: (data, variables) => {
+  return useMutation<
+    void,
+    Error,
+    { itemId: string; stepId: string; progress: TrackedItemStepProgress; projectId: string }
+  >({
+    mutationFn: (variables) => {
+      const progressWithStepId = {
+        ...variables.progress,
+        stepId: variables.stepId, // Ensure stepId is part of the object being passed
+      };
+      return updateTrackedItemStepProgress(
+        variables.itemId,
+        variables.stepId,
+        progressWithStepId as any, // Using `as any` to bypass strict type checking here, assuming the backend handles the structure
+      );
+    },
+    onSuccess: (_data, variables) => {
+      // Invalidate the main list of items for the project
+      queryClient.invalidateQueries({ queryKey: ['trackedItems', variables.projectId] });
+      // Also invalidate the details for the specific item, in case the details view is open
       queryClient.invalidateQueries({ queryKey: ['trackedItemDetails', variables.itemId] });
-      queryClient.invalidateQueries({ queryKey: ['trackedItems'] }); // Invalidate all tracked items to reflect progress changes
     },
   });
 };

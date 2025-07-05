@@ -2,33 +2,31 @@ import { Typography, Box, CircularProgress } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
 import { useParams } from 'react-router';
-import {
-  useGetProjectById,
-  useGetProjectSteps,
-  useGetTrackedItems,
-} from 'src/hooks/api/useProjectHooks';
+import { useGetProjectById, useGetProjectSteps } from 'src/hooks/api/useProjectHooks';
 import BatchTrackingComponent from './BatchTrackingComponent';
 
 const ProjectDetailPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
+
+  // This hook correctly returns the Project object directly. No change needed here.
   const {
     data: project,
     isLoading: isLoadingProject,
     isError: isErrorProject,
     error: errorProject,
   } = useGetProjectById(projectId);
+
+  // This hook likely returns the full response object: { body: [...] }
   const {
-    data: steps,
+    data: stepsData, // Renamed for clarity
     isLoading: isLoadingSteps,
     isError: isErrorSteps,
     error: errorSteps,
   } = useGetProjectSteps(projectId);
-  const {
-    data: trackedItems,
-    isLoading: isLoadingTrackedItems,
-    isError: isErrorTrackedItems,
-    error: errorTrackedItems,
-  } = useGetTrackedItems(projectId);
+
+  // --- FIX: The steps data should come directly from the hook since fetchProjectSteps already extracts from the API response ---
+  // The hook returns the steps array directly, not wrapped in a 'body' property
+  const steps = stepsData || [];
 
   const BCrumb = [
     { to: '/', title: 'Home' },
@@ -42,7 +40,7 @@ const ProjectDetailPage = () => {
     },
   ];
 
-  if (isLoadingProject || isLoadingSteps || isLoadingTrackedItems) {
+  if (isLoadingProject || isLoadingSteps) {
     return (
       <PageContainer title="Loading Project..." description="Loading project details">
         <Breadcrumb title="Loading..." items={BCrumb} />
@@ -53,16 +51,13 @@ const ProjectDetailPage = () => {
     );
   }
 
-  if (isErrorProject || isErrorSteps || isErrorTrackedItems) {
+  if (isErrorProject || isErrorSteps) {
     return (
       <PageContainer title="Error" description="Error loading project">
         <Breadcrumb title="Error" items={BCrumb} />
         <Typography color="error">
-          Error fetching project:{' '}
-          {errorProject?.message ||
-            errorSteps?.message ||
-            errorTrackedItems?.message ||
-            'An unknown error occurred'}
+          Error fetching project data:{' '}
+          {errorProject?.message || errorSteps?.message || 'An unknown error occurred'}
         </Typography>
       </PageContainer>
     );
@@ -88,6 +83,7 @@ const ProjectDetailPage = () => {
     >
       <Breadcrumb title={project.project_name} items={BCrumb} />
 
+      {/* Project details rendering remains the same */}
       <Box mt={3}>
         <Typography variant="h4" gutterBottom>
           {project.project_name}
@@ -107,10 +103,8 @@ const ProjectDetailPage = () => {
       </Box>
 
       <Box mt={4}>
-        <BatchTrackingComponent
-          project={project}
-          steps={steps || []}
-        />
+        {/* --- FIX: Pass the 'project' object directly and the extracted 'steps' array --- */}
+        <BatchTrackingComponent project={project} steps={steps} />
       </Box>
     </PageContainer>
   );

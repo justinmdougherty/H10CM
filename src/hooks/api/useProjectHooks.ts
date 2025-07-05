@@ -9,7 +9,7 @@ import {
 } from '../../services/api';
 import { Project } from '../../types/Project';
 import { ProjectStep } from '../../types/ProjectSteps';
-import { TrackedItem } from '../../types/TrackedItem';
+import { ProductionUnit } from '../../types/Production';
 
 export const useProjects = () => {
   return useQuery<Project[], Error>({
@@ -58,9 +58,14 @@ export const useGetProjectSteps = (projectId: string | undefined) => {
 };
 
 export const useGetTrackedItems = (projectId: string | undefined) => {
-  return useQuery<TrackedItem[], Error>({
+  console.log('🔍 useGetTrackedItems: Hook called with projectId:', projectId);
+  
+  return useQuery<ProductionUnit[], Error>({
     queryKey: ['trackedItems', projectId],
-    queryFn: () => fetchTrackedItems(projectId),
+    queryFn: () => {
+      console.log('🔍 useGetTrackedItems: Executing query function for projectId:', projectId);
+      return fetchTrackedItems(projectId);
+    },
     enabled: !!projectId,
   });
 };

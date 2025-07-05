@@ -8,21 +8,27 @@ export interface ProjectStep {
 }
 
 export interface UnitStepStatus {
-  stepId: string;
+  stepId: number | string; // API returns numbers, but we need to handle both
   status: StepStatusType;
   completedDate?: string;
   completedBy?: string;
 }
 
 export interface ProductionUnit {
-  item_id: string;
-  unit_serial_number: string;
-  pcb_serial_number?: string;
+  item_id: number | string; // API returns numbers, but we need to handle both
+  unit_serial_number?: string | null; // API can return null
+  pcb_serial_number?: string | null; // API can return null
   step_statuses?: UnitStepStatus[];
   is_shipped?: boolean;
-  shipped_date?: string;
-  date_fully_completed?: string;
-  [key: string]: any; // For dynamic attributes
+  shipped_date?: string | null;
+  date_fully_completed?: string | null;
+  current_overall_status?: string; // Add this field from API
+  date_created?: string;
+  last_modified?: string;
+  notes?: string;
+  project_id?: number;
+  attributes?: any[]; // For dynamic attributes
+  [key: string]: any; // For any other dynamic fields
 }
 
 export interface TableColumnConfig {

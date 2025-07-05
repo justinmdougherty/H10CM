@@ -16,7 +16,9 @@ const ProjectDetailPage = Loadable(lazy(() => import('../views/project-detail/Pr
 const Error = Loadable(lazy(() => import('../views/authentication/Error')));
 
 // Import new placeholder pages
-const InventoryPage = Loadable(lazy(() => import('../views/inventory/InventoryPage')));
+const InventoryDashboardPage = Loadable(
+  lazy(() => import('../views/inventory/InventoryDashboardPage')),
+);
 const NotesPage = Loadable(lazy(() => import('../views/apps/notes/Notes')));
 const CalendarPage = Loadable(lazy(() => import('../views/apps/calendar/BigCalendar')));
 const TicketsPage = Loadable(lazy(() => import('../views/apps/tickets/Tickets')));
@@ -30,7 +32,7 @@ const Router = [
       { path: '/dashboard', exact: true, element: <ProjectsDashboardPage /> },
       { path: '/project/:projectId', element: <ProjectDetailPage /> },
       // Add new routes
-      { path: '/inventory', element: <InventoryPage /> },
+      { path: '/inventory', element: <InventoryDashboardPage /> },
       { path: '/apps/notes', element: <NotesPage /> },
       { path: '/apps/calendar', element: <CalendarPage /> },
       { path: '/apps/tickets', element: <TicketsPage /> },
