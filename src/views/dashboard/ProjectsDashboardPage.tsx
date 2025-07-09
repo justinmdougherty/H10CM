@@ -102,7 +102,7 @@ const ProjectsDashboardPage = () => {
 
       <Box>
         <Grid container spacing={3}>
-          {projects &&
+          {projects && projects.length > 0 ? (
             projects.map((project) => (
               // FIX: Use project.project_id for the key
               <Grid item xs={12} sm={6} md={4} key={project.project_id}>
@@ -140,7 +140,28 @@ const ProjectsDashboardPage = () => {
                   </CardActionArea>
                 </Card>
               </Grid>
-            ))}
+            ))
+          ) : (
+            <Grid item xs={12}>
+              <Box
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                justifyContent="center"
+                sx={{ minHeight: '200px', textAlign: 'center' }}
+              >
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  No Projects Found
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Please create a project.
+                </Typography>
+                <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddProjectClick}>
+                  Create Your First Project
+                </Button>
+              </Box>
+            </Grid>
+          )}
         </Grid>
       </Box>
 

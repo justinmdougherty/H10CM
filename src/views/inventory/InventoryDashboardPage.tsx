@@ -15,29 +15,7 @@ import {
   FormControl,
   InputLabel,
   SelectChangeEvent,
-  TextField,
-  InputAdornment,
-  Chip,
-  LinearProgress,
-  Alert,
-  Grid,
-  Card,
-  CardContent,
-  Badge,
-  IconButton,
-  Tooltip,
-  Stack,
 } from '@mui/material';
-import {
-  Search as SearchIcon,
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Warning as WarningIcon,
-  Inventory as InventoryIcon,
-  TrendingDown as TrendingDownIcon,
-  Assessment as AssessmentIcon,
-} from '@mui/icons-material';
 import PageContainer from '../../components/container/PageContainer';
 import {
   useGetAllInventory,
@@ -56,14 +34,24 @@ const InventoryDashboardPage: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
 
   const { data: projects = [] } = useProjects();
-  const { data: allInventory = [], isLoading: isLoadingAll } = useGetAllInventory();
-  const { data: projectInventory = [], isLoading: isLoadingProject } = useGetInventoryByProject(
-    selectedProjectId as number,
-  );
+  const {
+    data: allInventory = [],
+    isLoading: isLoadingAll,
+    isError: isErrorAll,
+    error: errorAll,
+  } = useGetAllInventory();
+  const {
+    data: projectInventory = [],
+    isLoading: isLoadingProject,
+    isError: isErrorProject,
+    error: errorProject,
+  } = useGetInventoryByProject(selectedProjectId as number);
   const deleteInventoryItemMutation = useDeleteInventoryItem();
 
   const inventoryData = selectedProjectId ? projectInventory : allInventory;
   const isLoading = selectedProjectId ? isLoadingProject : isLoadingAll;
+  const isError = selectedProjectId ? isErrorProject : isErrorAll;
+  const error = selectedProjectId ? errorProject : errorAll;
 
   const handleProjectChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value;
@@ -139,9 +127,17 @@ const InventoryDashboardPage: React.FC = () => {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7}>Loading...</TableCell>
+                    <TableCell colSpan={7} style={{ textAlign: 'center' }}>
+                      Loading inventory items...
+                    </TableCell>
                   </TableRow>
-                ) : (
+                ) : isError ? (
+                  <TableRow>
+                    <TableCell colSpan={7} style={{ textAlign: 'center', color: 'red' }}>
+                      Error loading inventory: {error?.message || 'An unknown error occurred'}
+                    </TableCell>
+                  </TableRow>
+                ) : inventoryData && inventoryData.length > 0 ? (
                   inventoryData.map((item: InventoryItem) => (
                     <TableRow key={item.inventory_item_id}>
                       <TableCell>{item.item_name}</TableCell>
@@ -161,6 +157,24 @@ const InventoryDashboardPage: React.FC = () => {
                       </TableCell>
                     </TableRow>
                   ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>
+                      <Box display="flex" flexDirection="column" alignItems="center">
+                        <Typography variant="h6" color="text.secondary" gutterBottom>
+                          No Inventory Items Found
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                          {selectedProjectId
+                            ? 'This project has no inventory items yet.'
+                            : 'No inventory items have been created yet.'}
+                        </Typography>
+                        <Button variant="contained" onClick={handleOpenAddModal} size="small">
+                          Add First Item
+                        </Button>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
                 )}
               </TableBody>
             </Table>

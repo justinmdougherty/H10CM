@@ -105,7 +105,8 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({ open, onClose, onSucc
   const createAttributeMutation = useCreateAttributeDefinition();
   const createStepMutation = useCreateProjectStep();
   const createInventoryRequirementMutation = useCreateStepInventoryRequirement();
-  const { data: inventoryItems = [] } = useGetAllInventory();
+  const { data, isLoading, error } = useGetAllInventory();
+  const inventoryItems = Array.isArray(data?.data) ? data.data : [];
 
   // Reset form when modal closes
   const handleClose = () => {

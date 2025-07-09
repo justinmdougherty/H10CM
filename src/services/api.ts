@@ -143,9 +143,10 @@ export const getInventoryByProject = async (projectId: number): Promise<Inventor
   return data;
 };
 
-export const getAllInventory = async (): Promise<InventoryItem[]> => {
+// The API returns { data: InventoryItem[] }
+export const getAllInventory = async (): Promise<{ data: InventoryItem[] }> => {
   const response = await apiClient.get('/inventory-items');
-  return response.data.data; // Extract data from the nested data property
+  return response.data;
 };
 
 export const addInventoryItem = async (newItem: Omit<InventoryItem, 'inventory_item_id'>): Promise<InventoryItem> => {

@@ -54,7 +54,9 @@ const InventoryPage = () => {
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [adjustmentType, setAdjustmentType] = useState<'add' | 'subtract'>('add');
 
-  const { data: inventoryItems = [], isLoading, error, refetch } = useGetAllInventory();
+  const { data, isLoading, error, refetch } = useGetAllInventory();
+  // API returns { data: [...] }
+  const inventoryItems = Array.isArray(data?.data) ? data.data : [];
   const deleteInventoryMutation = useDeleteInventoryItem();
 
   // Filter inventory items based on search term
@@ -122,11 +124,15 @@ const InventoryPage = () => {
     refetch(); // Refresh the inventory list
   };
 
-  if (error) {
+  // Only show error if it's a real error AND we don't have any data
+  if (error && !inventoryItems.length && !isLoading) {
     return (
       <PageContainer title="Inventory" description="Inventory Management Page">
         <Breadcrumb title="Inventory" items={BCrumb} />
-        <Alert severity="error">Failed to load inventory items. Please try again.</Alert>
+        <Alert severity="error">
+          Failed to load inventory items: {error.message || 'An unknown error occurred'}. Please try
+          again.
+        </Alert>
       </PageContainer>
     );
   }
@@ -216,10 +222,27 @@ const InventoryPage = () => {
                 <TableBody>
                   {filteredItems.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} align="center">
-                        <Typography variant="body2" color="text.secondary">
-                          {searchTerm ? 'No items match your search.' : 'No inventory items found.'}
-                        </Typography>
+                      <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+                        <Box display="flex" flexDirection="column" alignItems="center">
+                          <Typography variant="h6" color="text.secondary" gutterBottom>
+                            {searchTerm ? 'No items match your search' : 'No inventory items found'}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            {searchTerm
+                              ? 'Try adjusting your search terms'
+                              : 'Start by adding your first inventory item'}
+                          </Typography>
+                          {!searchTerm && (
+                            <Button
+                              variant="contained"
+                              startIcon={<AddIcon />}
+                              onClick={() => setAddModalOpen(true)}
+                              size="small"
+                            >
+                              Add First Item
+                            </Button>
+                          )}
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ) : (

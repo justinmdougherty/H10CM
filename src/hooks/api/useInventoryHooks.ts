@@ -16,8 +16,10 @@ export const useGetInventoryByProject = (projectId: number) => {
   });
 };
 
+// The API returns { data: InventoryItem[] }
+type InventoryListResponse = { data: InventoryItem[] };
 export const useGetAllInventory = () => {
-  return useQuery<InventoryItem[], Error>({
+  return useQuery<InventoryListResponse, Error>({
     queryKey: ['inventory'],
     queryFn: getAllInventory,
   });
