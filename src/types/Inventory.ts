@@ -15,6 +15,8 @@ export interface InventoryAdjustment {
   adjustment_type: 'add' | 'subtract';
   reason?: string;
   adjusted_by_user_name?: string;
+  po_number?: string;
+  notes?: string;
 }
 
 export interface InventoryTransaction {

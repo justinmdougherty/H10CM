@@ -5,14 +5,14 @@ import {
   addInventoryItem,
   updateInventoryItem,
   deleteInventoryItem,
+  adjustInventoryStock,
 } from '../../services/api';
-import { InventoryItem } from '../../types/Inventory';
+import { InventoryItem, InventoryAdjustment } from '../../types/Inventory';
 
-export const useGetInventoryByProject = (projectId: number, options?: { enabled?: boolean }) => {
+export const useGetInventoryByProject = (projectId: number) => {
   return useQuery<InventoryItem[], Error>({
     queryKey: ['inventory', projectId],
     queryFn: () => getInventoryByProject(projectId),
-    enabled: options?.enabled,
   });
 };
 
@@ -50,6 +50,16 @@ export const useDeleteInventoryItem = () => {
   const queryClient = useQueryClient();
   return useMutation<void, Error, number>({
     mutationFn: deleteInventoryItem,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+  });
+};
+
+export const useAdjustInventoryStock = () => {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, InventoryAdjustment>({
+    mutationFn: adjustInventoryStock,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
     },

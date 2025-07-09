@@ -10,8 +10,12 @@ export interface ProjectStep {
 export interface UnitStepStatus {
   stepId: number | string; // API returns numbers, but we need to handle both
   status: StepStatusType;
+  // Legacy field names (for backward compatibility)
   completedDate?: string;
   completedBy?: string;
+  // New field names (current API response)
+  completion_timestamp?: string;
+  completed_by_user_name?: string;
 }
 
 export interface ProductionUnit {

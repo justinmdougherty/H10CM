@@ -15,14 +15,36 @@ import {
   FormControl,
   InputLabel,
   SelectChangeEvent,
+  TextField,
+  InputAdornment,
+  Chip,
+  LinearProgress,
+  Alert,
+  Grid,
+  Card,
+  CardContent,
+  Badge,
+  IconButton,
+  Tooltip,
+  Stack,
 } from '@mui/material';
+import {
+  Search as SearchIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Warning as WarningIcon,
+  Inventory as InventoryIcon,
+  TrendingDown as TrendingDownIcon,
+  Assessment as AssessmentIcon,
+} from '@mui/icons-material';
 import PageContainer from '../../components/container/PageContainer';
 import {
   useGetAllInventory,
   useGetInventoryByProject,
   useDeleteInventoryItem,
 } from '../../hooks/api/useInventoryHooks';
-import { useProjects } from '../../hooks/api/useProjectHooks'; // Assuming this hook exists to fetch projects
+import { useProjects } from '../../hooks/api/useProjectHooks';
 import { InventoryItem } from '../../types/Inventory';
 import AddInventoryItemModal from './modals/AddInventoryItemModal';
 import EditInventoryItemModal from './modals/EditInventoryItemModal';

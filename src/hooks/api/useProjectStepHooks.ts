@@ -5,10 +5,10 @@ import {
   updateProjectStep,
   deleteProjectStep,
 } from '../../services/api';
-import { ProductionStep } from '../../views/project-detail/BatchTrackingComponent';
+import { ProjectStep } from '../../types/ProjectSteps';
 
 export const useProjectSteps = (projectId: string | undefined) => {
-  return useQuery<ProductionStep[], Error>({
+  return useQuery<ProjectStep[], Error>({
     queryKey: ['projectSteps', projectId],
     queryFn: () => fetchProjectSteps(projectId),
     enabled: !!projectId,
@@ -17,7 +17,7 @@ export const useProjectSteps = (projectId: string | undefined) => {
 
 export const useCreateProjectStep = () => {
   const queryClient = useQueryClient();
-  return useMutation<ProductionStep, Error, Omit<ProductionStep, 'step_id'>>({
+  return useMutation<ProjectStep, Error, Omit<ProjectStep, 'step_id'>>({
     mutationFn: createProjectStep,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['projectSteps', data.project_id.toString()] });
@@ -27,7 +27,7 @@ export const useCreateProjectStep = () => {
 
 export const useUpdateProjectStep = () => {
   const queryClient = useQueryClient();
-  return useMutation<ProductionStep, Error, ProductionStep>({
+  return useMutation<ProjectStep, Error, ProjectStep>({
     mutationFn: updateProjectStep,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['projectSteps', data.project_id.toString()] });

@@ -46,7 +46,7 @@ This project was bootstrapped from the "Modernize - React and Next.js Admin Dash
 
 ## Project Progress & TODO List
 
-**Last Updated:** July 5, 2025
+**Last Updated:** January 13, 2025
 
 ### ✅ Completed
 
@@ -75,6 +75,51 @@ This project was bootstrapped from the "Modernize - React and Next.js Admin Dash
   - [x] Connected the component to live database calls for all its functions.
 - [x] **Backend API:**
   - [x] Fixed a critical bug where the API would crash when fetching tracked items for a project with no existing items.
+- [x] **Inventory Management System:**
+  - [x] **Inventory Dashboard Page:** Created comprehensive inventory page displaying all items with filtering and search capabilities.
+  - [x] **Inventory Data Fetching:** Implemented `useInventory` hooks and corresponding API service calls.
+  - [x] **Add/Edit Inventory UI:** Created modals for adding new inventory items and editing existing ones.
+  - [x] **Manual Inventory Adjustments (Plus/Minus System):**
+    - [x] **Addition (+) Button:** Implemented inventory addition with required fields:
+      - [x] Quantity to add with validation
+      - [x] Purchase Order (PO) number
+      - [x] Technician auto-populated from certificate service
+      - [x] Date of addition (auto-populated)
+      - [x] Notes/comments
+    - [x] **Subtraction (-) Button:** Implemented inventory removal with required fields:
+      - [x] Quantity to remove with stock validation
+      - [x] Reason for removal (mandatory dropdown: damaged parts, repair usage, testing, etc.)
+      - [x] Description/justification for the removal
+      - [x] Technician auto-populated from certificate service
+      - [x] Date of removal (auto-populated)
+    - [x] **Real-time Stock Projections:** Shows projected stock levels before confirming adjustments
+    - [x] **Comprehensive Validation:** Prevents negative stock and ensures all required fields are filled
+  - [x] **Part Replacement System:**
+    - [x] **Replace Part Feature:** Implemented complete part replacement functionality
+    - [x] **Replacement Scenarios:** Support for various replacement reasons:
+      - [x] End-of-life replacement (part no longer manufactured)
+      - [x] Quality issues (part deemed no longer good for process)
+      - [x] Obsolescence (newer version available)
+      - [x] Supplier changes
+    - [x] **Stock Handling Options:**
+      - [x] Keep existing stock (transfer to new part number)
+      - [x] Remove existing stock (mark as obsolete/disposed)
+    - [x] **Replacement Tracking:**
+      - [x] Old part number → New part number mapping
+      - [x] Reason for replacement (dropdown + comments)
+      - [x] Date of replacement (auto-populated)
+      - [x] Technician auto-populated from certificate service
+      - [x] Quantity affected tracking
+  - [x] **Transaction History & Audit Trail:**
+    - [x] **Transaction History Modal:** View complete history of all inventory movements
+    - [x] **Audit Trail:** Complete tracking of all manual adjustments separate from automated step-based consumption
+    - [x] **User Tracking:** All inventory changes tracked with user information from certificate service
+  - [x] **Enhanced UI Features:**
+    - [x] Stock level indicators with color coding (red for low stock, green for adequate)
+    - [x] Search and filtering capabilities across all inventory items
+    - [x] Action buttons with icons for better UX
+    - [x] Improved table layout with better spacing and responsive design
+    - [x] Real-time updates using React Query for data synchronization
 
 ### 🚧 In Progress
 
@@ -91,13 +136,25 @@ This project was bootstrapped from the "Modernize - React and Next.js Admin Dash
 
 - [ ] **Core Features - UI & Logic:**
   - [ ] **Project & Step Management UI:** Create interfaces for users to create/edit projects and their associated manufacturing steps.
-  - [ ] **Inventory Page (Full Implementation):** Build out the UI for displaying and managing inventory items, including forms for adding and adjusting stock.
   - [ ] **Production Order Views:** Design and implement views for creating and managing production batches.
-- [ ] **Inventory Management System:**
-  - [ ] **Inventory Dashboard Page:** Create a new page to display all inventory items from the database, initially showing items across all projects.
-  - [ ] **Inventory Data Fetching:** Implement `useInventory` hooks and corresponding API service calls.
-  - [ ] **Filtering Logic:** Add controls to the Inventory Dashboard to filter items by project.
-  - [ ] **Add/Edit Inventory UI:** Create modals or forms to add new inventory items and edit existing ones.
+- [ ] **Enhanced Inventory Page Improvements:**
+  - [ ] **Enhanced Dashboard UI:**
+    - [ ] Add inventory statistics cards (total items, low stock alerts, etc.)
+    - [ ] Bulk operations for inventory management
+    - [ ] Export inventory data (CSV, Excel)
+    - [ ] Print inventory reports
+  - [ ] **Inventory Delete Functionality:**
+    - [ ] **Delete Modal:** Replace current alert with proper modal for inventory item deletion
+    - [ ] **Mandatory Reason:** Require reason selection for item deletion (discontinued, damaged beyond repair, obsolete, etc.)
+    - [ ] **User Tracking:** Track who deleted the item using certificate service
+    - [ ] **Confirmation Process:** Two-step confirmation to prevent accidental deletions
+    - [ ] **Audit Trail:** Log all deletions with reason, user, and timestamp
+  - [ ] **Advanced Inventory Features:**
+    - [ ] Barcode scanning integration
+    - [ ] Batch processing for inventory updates
+    - [ ] Automated reordering based on minimum stock levels
+    - [ ] Advanced reporting and analytics
+    - [ ] Integration with external systems (ERP, accounting)
 - [ ] **Dynamic Project Creation & Management:**
   - [ ] **Project Creation/Editing Page:** Design and build a form/page for creating and editing projects.
   - [ ] **Project Configuration Inputs:**
@@ -108,7 +165,7 @@ This project was bootstrapped from the "Modernize - React and Next.js Admin Dash
   - [ ] **Inventory Association UI:**
     - [ ] On the project page, implement a dynamic form section to list and associate required inventory items with the project.
     - [ ] Design an intuitive UI (e.g., drag-and-drop, dropdowns within each step) to link specific inventory items to each production step and specify the quantity consumed per unit.
-  - [ ] **Backend Integration:** 
+  - [ ] **Backend Integration:**
     - [ ] Create new API endpoints and update the database schema to store all dynamic project configurations (attributes, steps, inventory-step associations).
     - [ ] **Database Schema:** Add columns/tables to link inventory items to specific projects and to individual steps within those projects, including the quantity consumed.
 - [ ] **TanStack Query Mutations:**
@@ -135,6 +192,98 @@ This section is for tracking new ideas, bugs, or improvements that come up durin
   - [ ] **Code Cleanup:** Remove unused variables, console logs, and commented-out code.
   - [ ] **Testing:** Implement unit and integration tests for critical components and hooks.
   - [ ] **Documentation:** Add JSDoc comments to complex functions and components.
+
+## Inventory Management System Features
+
+### Overview
+The inventory management system provides comprehensive tracking and control of all inventory items across projects, with features for manual adjustments, part replacements, and complete audit trails.
+
+### Core Features Implemented
+
+#### 1. **Inventory Dashboard**
+- **Comprehensive Item Display:** Shows all inventory items with key information (part number, description, current stock, minimum stock, location)
+- **Search & Filtering:** Real-time search across all fields with project-based filtering
+- **Stock Level Indicators:** Color-coded stock levels (red for low stock, green for adequate stock)
+- **Responsive Design:** Optimized for desktop and mobile viewing
+- **Real-time Updates:** Uses React Query for automatic data synchronization
+
+#### 2. **Manual Inventory Adjustments**
+- **Add Stock (+) Function:**
+  - Quantity validation with positive number requirements
+  - Purchase Order (PO) number tracking
+  - Automatic technician population from certificate service
+  - Auto-populated date/time stamps
+  - Optional notes for additional context
+  - Real-time stock projection before confirmation
+  
+- **Remove Stock (-) Function:**
+  - Quantity validation to prevent negative stock
+  - **Mandatory reason selection** from predefined categories:
+    - Damaged parts
+    - Repair usage
+    - Testing consumption
+    - Quality control
+    - Other (with description)
+  - Description field for additional justification
+  - Automatic technician population from certificate service
+  - Auto-populated date/time stamps
+  - Real-time stock projection before confirmation
+
+#### 3. **Part Replacement System**
+- **Comprehensive Replacement Tracking:**
+  - Old part number → New part number mapping
+  - Replacement reason categorization:
+    - End-of-life (no longer manufactured)
+    - Quality issues (part deemed unsuitable)
+    - Obsolescence (newer version available)
+    - Supplier changes
+  - Stock handling options:
+    - Keep existing stock (transfer to new part)
+    - Remove existing stock (mark as obsolete)
+  - Complete replacement history and audit trail
+
+#### 4. **Transaction History & Audit Trail**
+- **Complete Transaction Tracking:**
+  - All inventory movements logged with timestamps
+  - User identification for every transaction
+  - Reason codes and descriptions
+  - Before/after stock quantities
+  - Transaction type categorization (addition, removal, replacement)
+  - Searchable and filterable transaction history
+
+#### 5. **User Integration**
+- **Certificate Service Integration:**
+  - Automatic population of technician/user fields
+  - Consistent user identification across all inventory operations
+  - Integration with existing authentication system
+
+### Technical Implementation
+
+#### Frontend Components
+- `InventoryPage.tsx` - Main inventory dashboard
+- `InventoryAdjustmentModal.tsx` - Add/remove stock functionality  
+- `PartReplacementModal.tsx` - Part replacement operations
+- `TransactionHistoryModal.tsx` - Transaction history viewer
+- `EditInventoryModal.tsx` - Edit inventory item details
+
+#### Backend Integration
+- RESTful API endpoints for all inventory operations
+- Real-time data synchronization with React Query
+- Comprehensive error handling and validation
+- Transaction logging for audit requirements
+
+#### Data Flow
+1. **User Authentication** → Certificate service provides user details
+2. **Inventory Operations** → Validation → Database updates → Audit logging
+3. **Real-time Updates** → React Query invalidation → UI refresh
+4. **Transaction History** → Comprehensive logging → Searchable audit trail
+
+### Security & Validation
+- **Input Validation:** All user inputs validated on frontend and backend
+- **Stock Protection:** Prevents negative stock levels
+- **Mandatory Fields:** Ensures reason codes for stock removal
+- **User Tracking:** All operations tied to authenticated users
+- **Audit Trail:** Complete transaction history for compliance
 
 ## Generic Batch Tracking System Architecture
 

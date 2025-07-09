@@ -1,11 +1,11 @@
 import axios from 'axios';
 import { Project } from 'src/types/Project';
 import { InventoryItem, InventoryAdjustment, InventoryTransaction } from 'src/types/Inventory';
-import { ProductionUnit, UnitStepStatus } from 'src/types/Production';
+import { ProductionUnit } from 'src/types/Production';
 import { ProjectStep } from 'src/types/ProjectSteps';
 import { AttributeDefinition } from 'src/types/AttributeDefinition'; // Assuming this type exists
 import { StepInventoryRequirement } from 'src/types/StepInventoryRequirement'; // Assuming this type exists
-import { TrackedItem, TrackedItemAttribute } from 'src/types/TrackedItem';
+import { TrackedItem, TrackedItemAttribute, TrackedItemStepProgress } from 'src/types/TrackedItem';
 
 // The base URL will be handled by the Vite proxy you have set up
 const apiClient = axios.create({
@@ -48,6 +48,10 @@ export const createProject = async (project: Omit<Project, 'project_id' | 'date_
 export const updateProject = async (project: Project): Promise<Project> => {
   const { data } = await apiClient.put(`/projects/${project.project_id}`, project);
   return data;
+};
+
+export const deleteProject = async (projectId: string): Promise<void> => {
+  await apiClient.delete(`/projects/${projectId}`);
 };
 
 export const fetchProjectSteps = async (projectId: string | undefined): Promise<ProjectStep[]> => {
@@ -97,8 +101,11 @@ export const saveTrackedItemAttributes = async (itemId: string, attributes: Trac
   await apiClient.post(`/tracked-items/${itemId}/attributes`, attributes);
 };
 
-export const updateTrackedItemStepProgress = async (itemId: string, stepId: string, progress: UnitStepStatus): Promise<void> => {
-  await apiClient.put(`/tracked-items/${itemId}/steps/${stepId}`, { status: progress.status, start_time: progress.start_time, end_time: progress.end_time });
+export const updateTrackedItemStepProgress = async (itemId: string, stepId: string, progress: TrackedItemStepProgress): Promise<void> => {
+  await apiClient.put(`/tracked-items/${itemId}/steps/${stepId}`, { 
+    status: progress.status, 
+    completed_by_user_name: progress.completed_by_user_name
+  });
 };
 
 // --- Inventory API Functions ---

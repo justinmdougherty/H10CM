@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Typography,
   Box,
@@ -7,12 +8,17 @@ import {
   Chip,
   CardActionArea,
   CircularProgress,
+  Button,
+  Stack,
+  IconButton,
 } from '@mui/material';
+import { Add as AddIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import PageContainer from 'src/components/container/PageContainer';
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
 import { Link } from 'react-router'; // Using react-router-dom is standard for modern React apps with Vite
 import { Project } from 'src/types/Project';
 import { useGetProjects } from 'src/hooks/api/useProjectHooks';
+import AddProjectModal from './modals/AddProjectModal';
 
 const getStatusColor = (
   status: Project['status'],
@@ -32,7 +38,27 @@ const getStatusColor = (
 const BCrumb = [{ to: '/', title: 'Home' }, { title: 'Projects Dashboard' }];
 
 const ProjectsDashboardPage = () => {
-  const { data: projects, isLoading, isError, error } = useGetProjects();
+  const { data: projects, isLoading, isError, error, refetch } = useGetProjects();
+  const [addProjectModalOpen, setAddProjectModalOpen] = useState(false);
+
+  const handleAddProjectClick = () => {
+    setAddProjectModalOpen(true);
+  };
+
+  const handleAddProjectClose = () => {
+    setAddProjectModalOpen(false);
+  };
+
+  const handleProjectCreated = () => {
+    // Manually trigger a refetch when a project is created
+    refetch();
+    setAddProjectModalOpen(false);
+  };
+
+  const handleRefreshClick = () => {
+    console.log('🔄 Manual refresh triggered');
+    refetch();
+  };
 
   if (isLoading) {
     return (
@@ -59,6 +85,21 @@ const ProjectsDashboardPage = () => {
   return (
     <PageContainer title="Projects Dashboard" description="Overview of all projects">
       <Breadcrumb title="Projects Dashboard" items={BCrumb} />
+
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+        <Typography variant="h4" component="h1">
+          Projects
+        </Typography>
+        <Stack direction="row" spacing={1}>
+          <IconButton onClick={handleRefreshClick} disabled={isLoading} title="Refresh projects">
+            <RefreshIcon />
+          </IconButton>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddProjectClick}>
+            Add New Project
+          </Button>
+        </Stack>
+      </Stack>
+
       <Box>
         <Grid container spacing={3}>
           {projects &&
@@ -102,6 +143,12 @@ const ProjectsDashboardPage = () => {
             ))}
         </Grid>
       </Box>
+
+      <AddProjectModal
+        open={addProjectModalOpen}
+        onClose={handleAddProjectClose}
+        onSuccess={handleProjectCreated}
+      />
     </PageContainer>
   );
 };
