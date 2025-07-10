@@ -106,6 +106,41 @@
   }
 }
 
+/* Custom styling for project timeline events */
 .rbc-calendar {
   min-height: 600px;
+  padding-top: 16px; /* Add padding at the top of the calendar */
+}
+
+/* Reduce height of event bars to allow more events without scrolling */
+.rbc-event {
+  font-size: 11px !important; /* Slightly smaller font */
+  line-height: 1.2 !important; /* Tighter line height */
+  padding: 2px 4px !important; /* Reduced padding */
+  min-height: 16px !important; /* Smaller minimum height */
+  max-height: 20px !important; /* Maximum height to prevent tall bars */
+  overflow: hidden !important; /* Hide overflow text */
+  white-space: nowrap !important; /* Keep text on one line */
+  text-overflow: ellipsis !important; /* Add ellipsis for long text */
+}
+
+/* Reduce row height in month view to accommodate more events */
+.rbc-month-row {
+  min-height: 100px !important; /* Reduce from default height */
+}
+
+/* Ensure event containers have proper spacing */
+.rbc-date-cell > .rbc-row {
+  margin-bottom: 1px !important; /* Minimal spacing between events */
+}
+
+/* Style for the calendar container to add top padding */
+.rbc-calendar .rbc-month-view {
+  padding-top: 8px;
+}
+
+/* Toolbar styling improvements */
+.rbc-toolbar {
+  margin-bottom: 20px !important; /* More space below toolbar */
+  padding: 0 8px; /* Side padding for toolbar */
 }

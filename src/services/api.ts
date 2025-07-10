@@ -108,6 +108,19 @@ export const updateTrackedItemStepProgress = async (itemId: string, stepId: stri
   });
 };
 
+export const batchUpdateTrackedItemStepProgress = async (
+  itemIds: string[], 
+  stepId: string, 
+  progress: Omit<TrackedItemStepProgress, 'item_id' | 'step_id'>
+): Promise<void> => {
+  await apiClient.post('/tracked-items/batch-step-progress', {
+    itemIds,
+    stepId,
+    status: progress.status,
+    completed_by_user_name: progress.completed_by_user_name
+  });
+};
+
 // --- Inventory API Functions ---
 export const fetchInventoryItems = async (): Promise<InventoryItem[]> => {
     const { data } = await apiClient.get('/inventory-items');

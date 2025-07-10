@@ -22,6 +22,7 @@ import {
   IconCalendarEvent,  // For Calendar
   IconTicket,         // For Tickets
   IconNotes,          // For Notes
+  IconSettings,       // For Project Management
 } from '@tabler/icons-react';
 
 const Menuitems: MenuitemsType[] = [
@@ -31,13 +32,19 @@ const Menuitems: MenuitemsType[] = [
   },
   {
     id: uniqueId(),
-    title: 'Projects Dashboard',
+    title: 'Production Dashboard',
     icon: IconLayoutDashboard,
     href: '/dashboard',
   },
   {
     navlabel: true,
     subheader: 'Management',
+  },
+  {
+    id: uniqueId(),
+    title: 'Project Management',
+    icon: IconSettings,
+    href: '/project-management',
   },
   {
     id: uniqueId(),

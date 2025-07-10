@@ -12,13 +12,16 @@ const BlankLayout = Loadable(lazy(() => import('../layouts/blank/BlankLayout')))
 const ProjectsDashboardPage = Loadable(
   lazy(() => import('../views/dashboard/ProjectsDashboardPage')),
 );
+const ProjectManagementDashboard = Loadable(
+  lazy(() => import('../views/project-management/ProjectManagementDashboard')),
+);
 const ProjectDetailPage = Loadable(lazy(() => import('../views/project-detail/ProjectDetailPage')));
 const Error = Loadable(lazy(() => import('../views/authentication/Error')));
 
 // Import new placeholder pages
 const InventoryPage = Loadable(lazy(() => import('../views/inventory/InventoryPage')));
 const NotesPage = Loadable(lazy(() => import('../views/apps/notes/Notes')));
-const CalendarPage = Loadable(lazy(() => import('../views/apps/calendar/BigCalendar')));
+const CalendarPage = Loadable(lazy(() => import('../views/apps/calendar/BigCalendarWithProjects')));
 const TicketsPage = Loadable(lazy(() => import('../views/apps/tickets/Tickets')));
 
 const Router = [
@@ -28,6 +31,7 @@ const Router = [
     children: [
       { path: '/', element: <Navigate to="/dashboard" /> },
       { path: '/dashboard', exact: true, element: <ProjectsDashboardPage /> },
+      { path: '/project-management', element: <ProjectManagementDashboard /> },
       { path: '/project/:projectId', element: <ProjectDetailPage /> },
       // Add new routes
       { path: '/inventory', element: <InventoryPage /> },

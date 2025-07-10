@@ -1,4 +1,10 @@
-import { Typography, Box, CircularProgress, Chip, Paper } from '@mui/material';
+import {
+  Typography,
+  Box,
+  CircularProgress,
+  Chip,
+  Paper,
+} from '@mui/material';
 import {
   PlayArrow as ActiveIcon,
   Pause as InactiveIcon,
@@ -7,11 +13,17 @@ import {
   Archive as ArchivedIcon,
   PauseCircle as OnHoldIcon,
 } from '@mui/icons-material';
+import { useState } from 'react';
 import PageContainer from 'src/components/container/PageContainer';
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
 import { useParams } from 'react-router';
-import { useGetProjectById, useGetProjectSteps } from 'src/hooks/api/useProjectHooks';
+import {
+  useGetProjectById,
+  useGetProjectSteps,
+  useUpdateProject,
+} from 'src/hooks/api/useProjectHooks';
 import { ProjectStatus } from 'src/types/Project';
+import { useTrackedItems } from 'src/hooks/api/useTrackedItemHooks';
 import BatchTrackingComponent from './BatchTrackingComponent';
 
 // Enhanced status configuration with better colors and meanings
@@ -64,6 +76,8 @@ const getStatusConfig = (status: ProjectStatus) => {
 
 const ProjectDetailPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
+  const [statusMenuAnchorEl, setStatusMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [updateSuccess, setUpdateSuccess] = useState(false);
 
   // Hooks for project data
   const {
@@ -80,7 +94,72 @@ const ProjectDetailPage = () => {
     error: errorSteps,
   } = useGetProjectSteps(projectId);
 
+  // Get tracked items for statistics
+  const { data: trackedItems } = useTrackedItems(projectId);
+
+  // Update project mutation
+  const updateProjectMutation = useUpdateProject();
+
   const steps = stepsData || [];
+
+  // Helper function to check if a unit is complete (moved before usage)
+  const isUnitComplete = (unit: any): boolean => {
+    return (
+      unit.step_statuses?.every((ss: any) => ss.status === 'Complete' || ss.status === 'N/A') ??
+      false
+    );
+  };
+
+  // Calculate project statistics
+  const projectStats = trackedItems
+    ? {
+        totalUnits: trackedItems.length,
+        inProgressUnits: trackedItems.filter((unit) => !unit.is_shipped && !isUnitComplete(unit))
+          .length,
+        completedUnits: trackedItems.filter((unit) => !unit.is_shipped && isUnitComplete(unit))
+          .length,
+        shippedUnits: trackedItems.filter((unit) => unit.is_shipped).length,
+      }
+    : {
+        totalUnits: 0,
+        inProgressUnits: 0,
+        completedUnits: 0,
+        shippedUnits: 0,
+      };
+
+  // Status menu handlers
+  const handleStatusMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setStatusMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleStatusMenuClose = () => {
+    setStatusMenuAnchorEl(null);
+  };
+
+  const handleStatusChange = async (newStatus: ProjectStatus) => {
+    if (!project) return;
+
+    try {
+      // Update project with new status
+      const updatedProject = { ...project, status: newStatus };
+      await updateProjectMutation.mutateAsync(updatedProject);
+      setUpdateSuccess(true);
+      setTimeout(() => setUpdateSuccess(false), 3000);
+    } catch (error) {
+      console.error('Failed to update project status:', error);
+    }
+
+    handleStatusMenuClose();
+  };
+
+  const statusOptions: ProjectStatus[] = [
+    'Active',
+    'Inactive',
+    'Planning',
+    'Completed',
+    'Archived',
+    'On Hold',
+  ];
 
   const BCrumb = [
     { to: '/dashboard', title: 'Home' },
@@ -132,7 +211,7 @@ const ProjectDetailPage = () => {
   return (
     <PageContainer
       title={`Project: ${project.project_name}`}
-      description={`Production tracking for project ${project.project_name}`}
+      description={`Homepage for project ${project.project_name}`}
     >
       <Breadcrumb title={project.project_name} items={BCrumb} />
 
@@ -171,6 +250,26 @@ const ProjectDetailPage = () => {
       </Typography>
 
       <BatchTrackingComponent project={project} steps={steps} />
+
+      {/* Status Change Menu */}
+      <Menu
+        anchorEl={statusMenuAnchorEl}
+        open={Boolean(statusMenuAnchorEl)}
+        onClose={handleStatusMenuClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        {statusOptions.map((status) => (
+          <MenuItem
+            key={status}
+            onClick={() => handleStatusChange(status)}
+            disabled={status === project.status || updateProjectMutation.isPending}
+          >
+            <ListItemIcon>{getStatusConfig(status).icon}</ListItemIcon>
+            <ListItemText primary={status} secondary={getStatusConfig(status).description} />
+          </MenuItem>
+        ))}
+      </Menu>
     </PageContainer>
   );
 };

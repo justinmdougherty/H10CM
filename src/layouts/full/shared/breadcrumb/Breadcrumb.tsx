@@ -14,16 +14,17 @@ interface BreadCrumbType {
   items?: any[];
   title: string;
   children?: any;
+  compact?: boolean; // Add compact prop for data-heavy pages
 }
 
-const Breadcrumb = ({ subtitle, items, title, children }: BreadCrumbType) => (
+const Breadcrumb = ({ subtitle, items, title, children, compact = true }: BreadCrumbType) => (
   <Grid
     container
     sx={{
       backgroundColor: 'primary.light',
       borderRadius: (theme: Theme) => theme.shape.borderRadius / 4,
-      p: '30px 25px 20px',
-      marginBottom: '30px',
+      p: compact ? '12px 20px 8px' : '30px 25px 20px',
+      marginBottom: compact ? '10px' : '30px',
       position: 'relative',
       overflow: 'hidden',
     }}
@@ -33,36 +34,48 @@ const Breadcrumb = ({ subtitle, items, title, children }: BreadCrumbType) => (
       size={{
         xs: 12,
         sm: 6,
-        lg: 8
-      }}>
-      <Typography variant="h4">{title}</Typography>
-      <Typography color="textSecondary" variant="h6" fontWeight={400} mt={0.8} mb={0}>
-        {subtitle}
+        lg: 8,
+      }}
+    >
+      <Typography variant={compact ? 'h5' : 'h4'} sx={compact ? { fontSize: '1.15rem' } : {}}>
+        {title}
       </Typography>
+      {subtitle && (
+        <Typography
+          color="textSecondary"
+          variant="h6"
+          fontWeight={400}
+          mt={0.8}
+          mb={0}
+          sx={compact ? { fontSize: '0.85rem' } : {}}
+        >
+          {subtitle}
+        </Typography>
+      )}
       <Breadcrumbs
         separator={
           <IconCircle
-            size="5"
+            size="4"
             fill="textSecondary"
             fillOpacity={'0.6'}
             style={{ margin: '0 5px' }}
           />
         }
-        sx={{ alignItems: 'center', mt: items ? '10px' : '' }}
+        sx={{ alignItems: 'center', mt: items ? (compact ? '3px' : '10px') : '' }}
         aria-label="breadcrumb"
       >
         {items
           ? items.map((item) => (
-            <div key={item.title}>
-              {item.to ? (
-                <Link underline="none" color="inherit" component={NavLink} to={item.to}>
-                  {item.title}
-                </Link>
-              ) : (
-                <Typography color="textPrimary">{item.title}</Typography>
-              )}
-            </div>
-          ))
+              <div key={item.title}>
+                {item.to ? (
+                  <Link underline="none" color="inherit" component={NavLink} to={item.to}>
+                    {item.title}
+                  </Link>
+                ) : (
+                  <Typography color="textPrimary">{item.title}</Typography>
+                )}
+              </div>
+            ))
           : ''}
       </Breadcrumbs>
     </Grid>
@@ -72,8 +85,9 @@ const Breadcrumb = ({ subtitle, items, title, children }: BreadCrumbType) => (
       size={{
         xs: 12,
         sm: 6,
-        lg: 4
-      }}>
+        lg: 4,
+      }}
+    >
       <Box
         sx={{
           display: { xs: 'none', md: 'block', lg: 'flex' },
@@ -87,7 +101,7 @@ const Breadcrumb = ({ subtitle, items, title, children }: BreadCrumbType) => (
         ) : (
           <>
             <Box sx={{ top: '0px', position: 'absolute' }}>
-              {/* <img src={breadcrumbImg} alt={breadcrumbImg} /> <-------------------------- image for page header */} 
+              {/* <img src={breadcrumbImg} alt={breadcrumbImg} /> <-------------------------- image for page header */}
             </Box>
           </>
         )}

@@ -105,7 +105,7 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({ open, onClose, onSucc
   const createAttributeMutation = useCreateAttributeDefinition();
   const createStepMutation = useCreateProjectStep();
   const createInventoryRequirementMutation = useCreateStepInventoryRequirement();
-  const { data, isLoading, error } = useGetAllInventory();
+  const { data } = useGetAllInventory();
   const inventoryItems = Array.isArray(data?.data) ? data.data : [];
 
   // Reset form when modal closes
@@ -224,7 +224,7 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({ open, onClose, onSucc
       console.log('Creating project with data:', projectInfo);
       const createdProject = await createProjectMutation.mutateAsync({
         ...projectInfo,
-        status: 'Development', // Set default status
+        status: 'Planning', // Set default status to Planning (more realistic for new projects)
         last_modified: new Date().toISOString(),
       });
 

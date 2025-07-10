@@ -11,7 +11,7 @@ type Props = {
 };
 
 const PageContainer = ({ title, description, children }: Props) => (
-  <div>
+  <div style={{ paddingTop: '16px' }}>
     <Helmet>
       <title>{title}</title>
       <meta name="description" content={description} />
