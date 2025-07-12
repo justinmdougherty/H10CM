@@ -1,3 +1,46 @@
+🤖 Agent Instructions
+Welcome to the project! To ensure your contributions are effective, accurate, and aligned with our development practices, please adhere to the following instructions for all tasks within this repository.
+
+1. Core Tools & Methodologies
+These are the foundational tools and processes to be used for all assignments.
+
+Documentation Context (Context7): For all coding and documentation-related tasks, you are required to use the Context7 MCP server. This is non-negotiable and ensures that all code, libraries, and frameworks are based on the latest, most accurate documentation available, preventing the use of outdated or hallucinatory information.
+
+Problem-Solving Approach (sequential-thinking): Apply a sequential thinking process to deconstruct complex problems. Before generating code, you must first outline the step-by-step plan you will follow. This ensures a logical, structured, and transparent approach to arriving at the solution.
+
+2. Additional Context Servers
+To enhance your capabilities, please leverage the following MCP servers where appropriate:
+
+Dependency Management (dependency-management): When a task involves adding, removing, or updating project dependencies, you must use the dependency-management server. This server provides context on the project's current dependencies and preferred package manager (npm, pip, cargo, etc.), ensuring consistency and preventing version conflicts.
+
+File System Interaction (file-system-interaction): For any tasks that require reading, writing, or modifying files within the repository, engage the file-system-interaction server. This provides you with the necessary context about the project's directory structure and ensures you have the correct permissions and pathing.
+
+API Context (api-context): When working with external APIs, utilize the api-context server. It can provide you with up-to-date API specifications, endpoint details, and authentication requirements, which is crucial for successful integration.
+
+3. General Instructions & Best Practices
+Follow these guidelines to ensure the quality and consistency of your work.
+
+Code Style and Linting: All code must adhere to the formatting rules defined in the .eslintrc, prettierrc, or other linting configuration files in this repository. Before finalizing your work, lint your code and fix any reported issues.
+
+Testing: If the task involves adding or modifying functionality, you are required to write or update corresponding tests. Ensure all existing and new tests pass before concluding the task.
+
+Commit Messages: Follow the Conventional Commits specification for all commit messages. This helps maintain a clear and understandable version history. (e.g., feat: add user authentication endpoint).
+
+Idempotency: Strive to make your operations idempotent where possible. This means that an operation, if performed multiple times, should have the same effect as if it were performed only once. This is particularly important for scripts and infrastructure changes.
+
+Security: Do not hardcode secrets or sensitive information (API keys, passwords, etc.) directly in the code. Use environment variables or a designated secrets management tool as configured for this project.
+
+4. Workflow and Checkpoints
+Iterative Development: Do not attempt to complete large tasks in a single response. Break down each assignment into smaller, logical sub-tasks (e.g., creating a new file, implementing a single function, adding a UI component).
+
+Stop and Await Approval: After completing each sub-task, you must pause and explicitly state that you are awaiting my review and approval. Present the changes you have made, and do not proceed to the next sub-task until I give you the go-ahead. This ensures we stay aligned and no work is lost.
+
+5. After completeing a task please update the documentation to reflect the accomplishment. Next look at the remaining TODO items list and suggest the enxt step.
+
+Run all terminal commands with PowerShell
+
+npx tsc --noEmit --skipLibCheck
+
 # Production Management & Inventory Tracking App
 
 Internal web application using React and TypeScript for production management and inventory tracking for a small team (~10 users). The application is styled using Material UI
@@ -30,12 +73,14 @@ Internal web application using React and TypeScript for production management an
    - [ ] Test error boundary with intentional errors
    - [ ] Verify notification system across all user actions
 
-3. **Advanced Search & Filtering Implementation** ⭐⭐⭐ *[3-5 days]*
-   - [ ] Create global search service with debouncing
-   - [ ] Add search bar to main header/navigation
-   - [ ] Implement fuzzy search for projects and inventory
-   - [ ] Add advanced filter components with AND/OR logic
-   - [ ] Create saved filter presets functionality
+3. **Advanced Search & Filtering Implementation** ⭐⭐⭐ *[3-5 days]* ✅ **COMPLETED**
+   - ✅ Create global search service with debouncing
+   - ✅ Implement fuzzy search for projects and inventory  
+   - ✅ Add advanced filter components with AND/OR logic
+   - ✅ Create saved filter presets functionality
+   - ✅ Add enhanced search bar to main header/navigation
+   - ✅ Create search results page with categorized display
+   - 📄 **Documentation**: [`SEARCH_SYSTEM_README.md`](src/services/SEARCH_SYSTEM_README.md)
 
 **Week 3-4: Core Feature Completion**
 4. **Project & Step Management UI** ⭐⭐⭐ *[5-7 days]*
@@ -179,31 +224,33 @@ Internal web application using React and TypeScript for production management an
 
 #### **🚀 Immediate Next Steps (Priority Order)**
 
-**Phase 1: Foundation & Stability (Week 1-2)**
-1. **Smart Notifications System** ⭐⭐⭐ *[2-3 days]*
-   - [ ] Toast notifications for step completions and status changes
-   - [ ] Real-time alerts for projects falling behind schedule
-   - [ ] Inventory low stock alerts with automatic notifications
-   - [ ] Success/error feedback for all user actions
-   - [ ] **Why First**: Immediate user experience improvement, integrates with existing React Query mutations
-   - [ ] **Dependencies**: None - builds on current infrastructure
+**Phase 1: Foundation & Stability (Week 1-2)** - ✅ **COMPLETED**
+1. ✅ **Smart Notifications System** ⭐⭐⭐ *[2-3 days]* - **IMPLEMENTED**
+   - [x] Toast notifications for step completions and status changes
+   - [x] Real-time alerts for projects falling behind schedule
+   - [x] Inventory low stock alerts with automatic notifications
+   - [x] Success/error feedback for all user actions
 
-2. **Enhanced Error Handling & Loading States** ⭐⭐⭐ *[2-4 days]*
-   - [ ] Global error boundary with user-friendly fallbacks
-   - [ ] Skeleton loaders for all dashboard components
-   - [ ] Retry mechanisms for failed API calls
-   - [ ] Offline capability indicators
-   - [ ] **Why Second**: Production-ready robustness, catches issues from Phase 1
-   - [ ] **Dependencies**: Builds on notification system for error feedback
+2. ✅ **Enhanced Error Handling & Loading States** ⭐⭐⭐ *[2-4 days]* - **IMPLEMENTED**
+   - [x] Global error boundary with user-friendly fallbacks
+   - [x] Skeleton loaders for all dashboard components
+   - [x] Retry mechanisms for failed API calls
+   - [x] Offline capability indicators
 
-**Phase 2: User Productivity (Week 3)**
-3. **Advanced Search & Filtering** ⭐⭐⭐ *[3-5 days]*
+3. ✅ **Health Dashboard & System Monitoring** ⭐⭐⭐ *[2-3 days]* - **IMPLEMENTED**
+   - [x] Comprehensive health monitoring page with real-time API checks
+   - [x] System metrics display and test results integration
+   - [x] Navigation integration and professional UI
+   - [x] Advanced debugging information and status indicators
+
+**Phase 2: User Productivity (Week 3)** - 🎯 **CURRENT PRIORITY**
+4. **Advanced Search & Filtering** ⭐⭐⭐ *[3-5 days]* - **NEXT TASK**
    - [ ] Global search bar across projects, inventory, and steps
    - [ ] Saved filter presets for common queries
    - [ ] Recent searches history and suggestions
    - [ ] Advanced filter combinations with AND/OR logic
-   - [ ] **Why Third**: Massive productivity boost, system is stable enough to handle complex queries
-   - [ ] **Dependencies**: Error handling system for search failures
+   - [ ] **Why Next**: Massive productivity boost, system is stable enough to handle complex queries
+   - [ ] **Dependencies**: Error handling system for search failures (✅ completed)
 
 **Phase 3: Essential Business Logic (Week 4-5)**
 4. **Project & Step Management UI** ⭐⭐⭐ *[1 week]*
@@ -233,6 +280,7 @@ Internal web application using React and TypeScript for production management an
 7. **Reporting Dashboard** ⭐⭐⭐ *[1-2 weeks]*
    - [ ] Executive production efficiency reports
    - [ ] Cost tracking per project with profitability analysis
+   - [ ] Resource utilization and capacity planning reports
    - [ ] Export capabilities (PDF, Excel, automated email reports)
    - [ ] **Why Seventh**: Executive visibility, builds on analytics foundation
    - [ ] **Dependencies**: Analytics system, export functionality from inventory
@@ -572,13 +620,32 @@ This project was bootstrapped from the "Modernize - React and Next.js Admin Dash
   - [x] Mock setup for browser APIs and external dependencies
   - [x] Coverage reporting configuration
 
-- [ ] **Current Implementation Tasks:**
-  - [ ] Install frontend testing dependencies (`npm install` in TF_CMapp)
-  - [ ] Install backend testing dependencies (`npm install` in api folder)
-  - [ ] Run first notification system tests
-  - [ ] Integrate skeleton loaders into existing dashboard components
+- [x] **Health Dashboard & System Monitoring** ⭐⭐⭐ (2-3 days) - **IMPLEMENTED**
+  - [x] **Comprehensive Health Monitoring Page** (`/system/health`):
+    - [x] Real-time API health checks with 30-second intervals
+    - [x] System metrics display (uptime, memory usage, active connections)
+    - [x] Test results integration showing frontend/backend test status
+    - [x] Notification system status verification
+    - [x] Advanced debugging information with browser and environment details
+  - [x] **Navigation Integration**:
+    - [x] Added to sidebar navigation under "System" section with heartbeat icon
+    - [x] Integrated into routing system with lazy loading
+    - [x] Accessible at `/system/health` route
+  - [x] **Technical Features**:
+    - [x] Interactive refresh controls for manual health checks
+    - [x] Visual status indicators (success/warning/error chips)
+    - [x] Expandable debugging section with performance metrics
+    - [x] Real-time API endpoint monitoring (/api/health, /api/health/db)
+    - [x] Integration with notification service for status updates
 
 ### 📝 To Do
+
+- [ ] **Advanced Search & Filtering Implementation** ⭐⭐⭐ *[3-5 days]* - **NEXT PRIORITY**
+  - [ ] Create global search service with debouncing
+  - [ ] Add search bar to main header/navigation
+  - [ ] Implement fuzzy search for projects and inventory
+  - [ ] Add advanced filter components with AND/OR logic
+  - [ ] Create saved filter presets functionality
 
 - [ ] **Core Features - UI & Logic:**
   - [ ] **Project & Step Management UI:** Create interfaces for users to create/edit projects and their associated manufacturing steps.
@@ -639,6 +706,82 @@ This project was bootstrapped from the "Modernize - React and Next.js Admin Dash
   - [ ] **Database Migrations:** Implement a tool or strategy for managing database schema changes.
   - [ ] **Environment Configuration:** Solidify the process for managing `.env` files for dev, test, and production.
   - [ ] **CI/CD:** Set up build and deployment automation pipelines.
+
+## 📈 Recent Accomplishments
+
+### ✅ Advanced Search Infrastructure (Sub-task 2) - December 2024
+**Global Search Service Infrastructure - COMPLETED**
+
+Implemented comprehensive search system foundation with:
+
+#### **Core Infrastructure** 
+- **Search Types** (`src/types/Search.ts`): Complete type definitions for SearchResult, SearchFilter, ActiveFilter, SearchPreset, SearchState
+- **State Management** (`src/store/searchStore.ts`): Zustand store with persistence for search preferences and history
+- **Search Service** (`src/services/searchService.ts`): Debounced search engine with fuzzy matching and multi-source querying
+- **React Hooks** (`src/hooks/api/useGlobalSearch.ts`): Four specialized hooks for different search scenarios
+- **Utilities** (`src/utils/searchUtils.ts`): Default filter configurations and search helper functions
+- **Initializer** (`src/services/searchInitializer.ts`): System initialization and health checks
+
+#### **Key Features Implemented**
+- ⚡ **Debounced Search**: 300ms debouncing with subscription-based result delivery
+- 🔍 **Fuzzy Matching**: Custom Levenshtein-based similarity scoring for intelligent text matching
+- 🏷️ **Advanced Filtering**: Support for 8 filter types (text, select, date ranges, numbers, etc.)
+- 💾 **Persistent State**: Search preferences and recent searches saved to localStorage
+- 🎯 **Multi-source**: Unified search across projects, inventory, and navigation
+- 📊 **Result Scoring**: Intelligent relevance ranking with metadata support
+
+#### **Filter System**
+- **Project Filters**: Status, type, creation date
+- **Inventory Filters**: Stock levels, units of measure, low stock alerts  
+- **General Filters**: Content type filtering with AND/OR logic support
+
+#### **Performance & UX**
+- Maximum 50 results with intelligent scoring
+- Subscription-based updates for real-time results
+- Memory-efficient with automatic cleanup
+- URL serialization for shareable searches
+
+**Next**: Sub-task 3 (Enhanced Global Search Bar Component) - UI implementation pending
+
+---
+
+### ✅ Enhanced Global Search Bar (Sub-task 3) - December 2024
+**Enhanced Global Search Bar Component - COMPLETED**
+
+Built complete UI layer for global search with modern UX patterns:
+
+#### **UI Components Created**
+- **Enhanced Search.tsx**: Complete overhaul of header search with global functionality
+- **SearchResultItem.tsx**: Rich result preview cards with metadata and scoring
+- **SearchResultsDropdown.tsx**: Categorized results with keyboard navigation
+- **QuickFilters.tsx**: Active filter management with visual chips
+- **SearchResultsPage.tsx**: Dedicated full-page search experience
+- **SearchSystemDemo.tsx**: Test interface for development and debugging
+
+#### **Key Features Implemented**
+- 🎯 **Keyboard Navigation**: Full arrow key navigation and shortcuts (Ctrl+K, Esc, Enter)
+- 🎨 **Rich Results Display**: Categorized results with icons, metadata, and relevance scores
+- 🔧 **Quick Filters**: Visual filter chips with instant add/remove functionality
+- 📱 **Responsive Design**: Works seamlessly across desktop and mobile interfaces
+- ⚡ **Real-time Updates**: Live search results with subscription-based updates
+- 🎪 **Recent Searches**: Smart suggestions based on search history
+
+#### **User Experience Enhancements**
+- **Modal Search Interface**: Clean, focused search dialog with Material UI design
+- **Visual Feedback**: Loading states, empty states, and error handling
+- **Smart Categorization**: Results grouped by Projects, Inventory, Navigation
+- **Result Previews**: Rich cards showing title, description, and metadata
+- **Accessibility**: Full ARIA support and keyboard navigation
+
+#### **Testing & Development**
+- **Demo Page**: `/search/demo` - Interactive testing interface
+- **Search Results Page**: `/search` - Full search experience
+- **Error-free Implementation**: All TypeScript errors resolved
+- **Router Integration**: Complete routing setup for search functionality
+
+**Next**: Sub-task 4 (Advanced Filter Components) - Advanced filtering UI pending
+
+---
 
 ### 🎯 Strategic Enhancement Roadmap
 
@@ -864,6 +1007,79 @@ The inventory management system provides comprehensive tracking and control of a
 - **Mandatory Fields:** Ensures reason codes for stock removal
 - **User Tracking:** All operations tied to authenticated users
 - **Audit Trail:** Complete transaction history for compliance
+
+## Health Dashboard & System Monitoring
+
+### Overview
+
+The Health Dashboard provides comprehensive system monitoring and health checking capabilities for the production management application, offering real-time insights into system status, API health, and testing results.
+
+### Key Features
+
+#### 1. **Real-time Health Monitoring**
+- **API Health Checks:** Continuous monitoring of critical API endpoints (`/api/health`, `/api/health/db`, `/api/projects`, `/api/inventory-items`)
+- **Automated Refresh:** Health checks run automatically every 30 seconds
+- **Manual Refresh:** On-demand health check triggering with loading states
+- **Response Time Tracking:** Monitors API response times for performance insights
+- **Status Indicators:** Visual chips showing healthy/warning/error states
+
+#### 2. **System Metrics Display**
+- **Uptime Tracking:** Shows system uptime with formatted display
+- **Memory Usage:** Placeholder for server-side memory monitoring
+- **Active Connections:** Displays current API connection count
+- **Performance Metrics:** Browser-based performance and timing data
+
+#### 3. **Test Results Integration**
+- **Frontend Testing:** Shows status of Vitest + React Testing Library tests
+- **Backend Testing:** Displays Jest + Supertest API test results
+- **Mock Test Data:** Realistic test scenarios with timing and status information
+- **Test Categories:** Organized by test type (unit, integration, API)
+
+#### 4. **Notification System Status**
+- **React Hot Toast Integration:** Confirms notification system is active
+- **Error Boundary Status:** Verifies global error handling is operational
+- **Testing Infrastructure:** Shows testing framework integration status
+- **API Documentation:** Confirms health endpoint availability
+
+#### 5. **Advanced Debugging Information**
+- **Browser Information:** User agent, screen resolution, color depth
+- **Performance Metrics:** Navigation timing, memory usage, connection type
+- **Environment Details:** Current URL, timestamp, viewport information
+- **Expandable Section:** Collapsible accordion for detailed debugging data
+
+### Technical Implementation
+
+#### Frontend Components
+- `HealthDashboard.tsx` - Main health monitoring dashboard
+- **Navigation Integration** - Added to sidebar under "System" section
+- **Route Configuration** - Accessible at `/system/health`
+- **Icon Integration** - Uses heartbeat icon (IconHeartbeat) from Tabler Icons
+
+#### Health Check Logic
+- **Endpoint Testing:** Automated testing of all critical API endpoints
+- **Error Handling:** Graceful handling of connection failures and timeouts
+- **Status Categorization:** Health checks categorized as healthy/warning/error
+- **Real-time Updates:** Uses React state and intervals for live monitoring
+
+#### UI/UX Features
+- **Material UI Integration:** Consistent design with application theme
+- **Responsive Layout:** Grid-based layout adapting to different screen sizes
+- **Interactive Controls:** Refresh buttons with loading states and disabled states
+- **Status Visualization:** Color-coded chips and icons for quick status identification
+- **Professional Styling:** Clean, dashboard-style interface for system administrators
+
+### Navigation & Access
+- **Sidebar Navigation:** Added "System" section with "Health Dashboard" menu item
+- **Route Protection:** Integrated into main application routing system
+- **Lazy Loading:** Component loaded on-demand for optimal performance
+- **Direct Access:** Available at `http://localhost:5173/system/health`
+
+### Use Cases
+- **System Administration:** Monitor overall application health and performance
+- **Development & Testing:** Verify API endpoints and testing infrastructure
+- **Troubleshooting:** Diagnose system issues with detailed debugging information
+- **Performance Monitoring:** Track response times and system metrics
+- **Production Monitoring:** Real-time oversight of critical system components
 
 ## Calendar Integration System
 

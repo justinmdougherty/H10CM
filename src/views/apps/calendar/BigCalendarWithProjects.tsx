@@ -224,7 +224,7 @@ const BigCalendar = ({ isBreadcrumb }: { isBreadcrumb: boolean }) => {
     <PageContainer title="Calendar" description="Project timelines and calendar events">
       {isBreadcrumb ? <Breadcrumb title="Calendar" items={BCrumb} /> : null}
       <BlankCard>
-        <CardContent sx={{ pt: 3, pb: 2 }}>
+        <CardContent sx={{ pt: 4, pb: 2, mt: 2 }}>
           <Calendar
             localizer={localizer}
             events={projectEvents}

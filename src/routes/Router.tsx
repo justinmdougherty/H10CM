@@ -23,6 +23,9 @@ const InventoryPage = Loadable(lazy(() => import('../views/inventory/InventoryPa
 const NotesPage = Loadable(lazy(() => import('../views/apps/notes/Notes')));
 const CalendarPage = Loadable(lazy(() => import('../views/apps/calendar/BigCalendarWithProjects')));
 const TicketsPage = Loadable(lazy(() => import('../views/apps/tickets/Tickets')));
+const HealthDashboard = Loadable(lazy(() => import('../views/system/HealthDashboard')));
+const SearchResultsPage = Loadable(lazy(() => import('../views/search/SearchResultsPage')));
+const SearchSystemDemo = Loadable(lazy(() => import('../components/shared/SearchSystemDemo')));
 
 const Router = [
   {
@@ -38,6 +41,9 @@ const Router = [
       { path: '/apps/notes', element: <NotesPage /> },
       { path: '/apps/calendar', element: <CalendarPage /> },
       { path: '/apps/tickets', element: <TicketsPage /> },
+      { path: '/system/health', element: <HealthDashboard /> },
+      { path: '/search', element: <SearchResultsPage /> },
+      { path: '/search/demo', element: <SearchSystemDemo /> },
 
       { path: '*', element: <Navigate to="/auth/404" /> },
     ],

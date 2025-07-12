@@ -1,17 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { notifications, projectNotifications } from '../services/notificationService'
 
-// Mock react-hot-toast
-vi.mock('react-hot-toast', () => ({
-  default: {
+// Mock react-hot-toast using the factory function pattern
+vi.mock('react-hot-toast', () => {
+  const mockFunctions = {
     success: vi.fn(),
     error: vi.fn(),
     loading: vi.fn(),
     dismiss: vi.fn(),
     promise: vi.fn(),
-  },
-  Toaster: vi.fn(),
-}))
+  }
+  
+  const mockToast = vi.fn()
+  Object.assign(mockToast, mockFunctions)
+  
+  return {
+    default: mockToast,
+    Toaster: vi.fn(),
+  }
+})
+
+import { notifications, projectNotifications } from '../services/notificationService'
+import toast from 'react-hot-toast'
 
 describe('NotificationService', () => {
   beforeEach(() => {
@@ -20,8 +29,6 @@ describe('NotificationService', () => {
 
   describe('Basic notifications', () => {
     it('should call toast.success for success notifications', () => {
-      const toast = require('react-hot-toast').default
-      
       notifications.success('Test success message')
       
       expect(toast.success).toHaveBeenCalledWith(
@@ -38,8 +45,6 @@ describe('NotificationService', () => {
     })
 
     it('should call toast.error for error notifications with longer duration', () => {
-      const toast = require('react-hot-toast').default
-      
       notifications.error('Test error message')
       
       expect(toast.error).toHaveBeenCalledWith(
@@ -57,8 +62,6 @@ describe('NotificationService', () => {
 
   describe('Project-specific notifications', () => {
     it('should show success notification for project creation', () => {
-      const toast = require('react-hot-toast').default
-      
       projectNotifications.projectCreated('Test Project')
       
       expect(toast.success).toHaveBeenCalledWith(
@@ -68,8 +71,6 @@ describe('NotificationService', () => {
     })
 
     it('should show success notification for status updates', () => {
-      const toast = require('react-hot-toast').default
-      
       projectNotifications.statusUpdated('Test Project', 'Active')
       
       expect(toast.success).toHaveBeenCalledWith(
@@ -79,8 +80,6 @@ describe('NotificationService', () => {
     })
 
     it('should show warning notification for low stock', () => {
-      const toast = require('react-hot-toast').default
-      
       projectNotifications.inventoryLowStock('Test Part', 5, 10)
       
       expect(toast).toHaveBeenCalledWith(
@@ -98,7 +97,6 @@ describe('NotificationService', () => {
 
   describe('Promise-based notifications', () => {
     it('should handle successful promises', async () => {
-      const toast = require('react-hot-toast').default
       const successfulPromise = Promise.resolve('success')
       
       await notifications.promise(

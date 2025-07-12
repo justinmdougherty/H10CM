@@ -1,4 +1,5 @@
-import toast, { Toaster } from 'react-hot-toast'
+import React from 'react'
+import toast, { Toaster, Renderable } from 'react-hot-toast'
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info' | 'loading'
 
@@ -7,7 +8,7 @@ export interface NotificationOptions {
   position?: 'top-center' | 'top-right' | 'top-left' | 'bottom-center' | 'bottom-right' | 'bottom-left'
   style?: React.CSSProperties
   className?: string
-  icon?: React.ReactNode
+  icon?: Renderable
   id?: string
 }
 
@@ -21,8 +22,11 @@ class NotificationService {
   // Success notifications
   success(message: string, options?: NotificationOptions) {
     return toast.success(message, {
-      ...this.defaultOptions,
-      ...options,
+      duration: options?.duration || this.defaultOptions.duration,
+      position: options?.position || this.defaultOptions.position,
+      className: options?.className,
+      icon: options?.icon,
+      id: options?.id,
       style: {
         background: '#4caf50',
         color: 'white',
@@ -39,9 +43,11 @@ class NotificationService {
   // Error notifications
   error(message: string, options?: NotificationOptions) {
     return toast.error(message, {
-      ...this.defaultOptions,
-      duration: 6000, // Longer duration for errors
-      ...options,
+      duration: options?.duration || 6000, // Longer duration for errors
+      position: options?.position || this.defaultOptions.position,
+      className: options?.className,
+      icon: options?.icon,
+      id: options?.id,
       style: {
         background: '#f44336',
         color: 'white',
@@ -58,9 +64,11 @@ class NotificationService {
   // Warning notifications
   warning(message: string, options?: NotificationOptions) {
     return toast(message, {
-      ...this.defaultOptions,
-      ...options,
-      icon: '⚠️',
+      duration: options?.duration || this.defaultOptions.duration,
+      position: options?.position || this.defaultOptions.position,
+      className: options?.className,
+      icon: options?.icon || '⚠️',
+      id: options?.id,
       style: {
         background: '#ff9800',
         color: 'white',
@@ -77,9 +85,11 @@ class NotificationService {
   // Info notifications
   info(message: string, options?: NotificationOptions) {
     return toast(message, {
-      ...this.defaultOptions,
-      ...options,
-      icon: 'ℹ️',
+      duration: options?.duration || this.defaultOptions.duration,
+      position: options?.position || this.defaultOptions.position,
+      className: options?.className,
+      icon: options?.icon || 'ℹ️',
+      id: options?.id,
       style: {
         background: '#2196f3',
         color: 'white',
@@ -96,8 +106,11 @@ class NotificationService {
   // Loading notifications
   loading(message: string, options?: NotificationOptions) {
     return toast.loading(message, {
-      ...this.defaultOptions,
-      ...options,
+      duration: options?.duration || this.defaultOptions.duration,
+      position: options?.position || this.defaultOptions.position,
+      className: options?.className,
+      icon: options?.icon,
+      id: options?.id,
       style: {
         background: '#666',
         color: 'white',
@@ -135,7 +148,14 @@ class NotificationService {
       case 'loading':
         return this.loading(message, options)
       default:
-        return toast(message, { ...this.defaultOptions, ...options })
+        return toast(message, {
+          duration: options?.duration || this.defaultOptions.duration,
+          position: options?.position || this.defaultOptions.position,
+          className: options?.className,
+          icon: options?.icon,
+          id: options?.id,
+          style: options?.style
+        })
     }
   }
 
@@ -161,8 +181,9 @@ class NotificationService {
         error: errorMessage,
       },
       {
-        ...this.defaultOptions,
-        ...options,
+        position: options?.position || this.defaultOptions.position,
+        className: options?.className,
+        id: options?.id,
         style: {
           borderRadius: '8px',
           padding: '16px',

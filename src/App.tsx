@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { CustomizerContext } from 'src/context/CustomizerContext';
 import { ThemeSettings } from './theme/Theme';
 import RTL from './layouts/full/shared/customizer/RTL';
@@ -7,10 +7,16 @@ import { RouterProvider } from 'react-router';
 import router from './routes/Router';
 import { Toaster } from './services/notificationService';
 import ErrorBoundary from './components/shared/ErrorBoundary';
+import { initializeSearchSystem } from './services/searchInitializer';
 
 function App() {
   const theme = ThemeSettings();
   const { activeDir } = useContext(CustomizerContext);
+
+  // Initialize search system on app startup
+  useEffect(() => {
+    initializeSearchSystem();
+  }, []);
 
   return (
     <ErrorBoundary>

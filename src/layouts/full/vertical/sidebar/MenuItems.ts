@@ -23,6 +23,7 @@ import {
   IconTicket,         // For Tickets
   IconNotes,          // For Notes
   IconSettings,       // For Project Management
+  IconHeartbeat,      // For Health Dashboard
 } from '@tabler/icons-react';
 
 const Menuitems: MenuitemsType[] = [
@@ -73,6 +74,16 @@ const Menuitems: MenuitemsType[] = [
     title: 'Tickets',
     icon: IconTicket,
     href: '/apps/tickets',
+  },
+  {
+    navlabel: true,
+    subheader: 'System',
+  },
+  {
+    id: uniqueId(),
+    title: 'Health Dashboard',
+    icon: IconHeartbeat,
+    href: '/system/health',
   },
 ];
 
