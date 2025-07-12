@@ -1,17 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import {
-  Box,
-  Avatar,
-  Typography,
-  IconButton,
-  Tooltip,
-  useMediaQuery,
-  CircularProgress,
-} from '@mui/material';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import { IconPower } from '@tabler/icons-react';
-import { Link } from 'react-router';
+import { Box, Avatar, Typography, useMediaQuery, CircularProgress } from '@mui/material';
 import { CustomizerContext } from 'src/context/CustomizerContext';
 import certificateService, { UserAuthInfo } from 'src/services/certificateService'; // Import service and type
 
@@ -103,19 +91,6 @@ export const Profile = () => {
         </Typography>
         {/* You can add a role or username here if available and desired */}
         {/* <Typography variant="caption">{userInfo?.username || 'Role'}</Typography> */}
-      </Box>
-      <Box sx={{ ml: 'auto' }}>
-        <Tooltip title="Logout" placement="top">
-          <IconButton
-            color="primary"
-            component={Link}
-            to="/auth/login" // Make sure this route exists or is planned
-            aria-label="logout"
-            size="small"
-          >
-            <IconPower size="20" />
-          </IconButton>
-        </Tooltip>
       </Box>
     </Box>
   );

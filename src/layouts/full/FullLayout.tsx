@@ -8,6 +8,7 @@ import Navigation from '../full/horizontal/navbar/Navigation';
 import HorizontalHeader from '../full/horizontal/header/Header';
 import ScrollToTop from '../../components/shared/ScrollToTop';
 import LoadingBar from '../../LoadingBar';
+import CartDrawer from '../../components/shared/CartDrawer';
 import { CustomizerContext } from 'src/context/CustomizerContext';
 import config from 'src/context/config';
 
@@ -113,6 +114,7 @@ const FullLayout: FC = () => {
             </Container>
           )}
           <Customizer />
+          <CartDrawer />
         </PageWrapper>
       </MainWrapper>
     </>

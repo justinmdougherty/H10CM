@@ -285,6 +285,7 @@ const PartReplacementModal: React.FC<PartReplacementModalProps> = ({
           sx={{ mb: 2 }}
           required
           placeholder="Enter technician name"
+          InputProps={{ readOnly: true }}
         />
 
         {/* Stock Handling */}

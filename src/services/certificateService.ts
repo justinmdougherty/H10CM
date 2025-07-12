@@ -1,5 +1,5 @@
 // src/services/certificateService.ts
-import forge from 'node-forge';
+import * as forge from 'node-forge';
 
 export interface CertificateInfo {
   commonName: string;
@@ -234,3 +234,102 @@ const certificateService = {
 };
 
 export default certificateService;
+
+/* 
+===============================================================================
+                                    API REFERENCE
+===============================================================================
+
+CERTIFICATE SERVICE API
+
+This service provides certificate-based authentication and user management 
+functionality for applications that use client certificates (CAC/PIV cards).
+
+OVERVIEW:
+---------
+The Certificate Service extracts user information from X.509 certificates,
+processes authentication responses, and provides user activity logging.
+It expects certificates with Common Names in the format "LAST.FIRST.MIDDLE.ID".
+
+USAGE:
+------
+
+1. GET CURRENT USER:
+   ```typescript
+   import certificateService from './services/certificateService';
+   
+   const user = await certificateService.getCurrentUser();
+   console.log(user.displayName); // "John Doe"
+   console.log(user.username);    // "doe.john.m.1234567890"
+   ```
+
+2. LOG USER ACTIVITY:
+   ```typescript
+   // Log simple activity
+   await certificateService.logUserActivity('LOGIN', 'User logged in');
+   
+   // Log complex activity with object details
+   await certificateService.logUserActivity('DOCUMENT_ACCESS', {
+     documentId: '12345',
+     action: 'view',
+     timestamp: Date.now()
+   });
+   ```
+
+3. EXTRACT CERTIFICATE INFO (Advanced):
+   ```typescript
+   const certInfo = certificateService.extractCertificateInfo(base64CertData);
+   if (certInfo) {
+     console.log(certInfo.nameParts.firstName); // "John"
+     console.log(certInfo.nameParts.lastName);  // "Doe"
+   }
+   ```
+
+INTERFACES:
+-----------
+
+CertificateInfo:
+- commonName: string       - Raw common name from certificate
+- username: string         - Normalized username (lowercase)
+- displayName: string      - Formatted display name
+- nameParts?: object       - Parsed name components
+
+UserAuthInfo:
+- username: string         - User identifier
+- displayName: string      - Formatted full name
+- certificateInfo: object  - Certificate details (subject, issuer, serial)
+- nameParts?: object       - Optional parsed name components
+
+EXPECTED CERTIFICATE FORMAT:
+---------------------------
+Common Name should be in format: "LAST.FIRST.MIDDLE.ID"
+- Example: "DOE.JOHN.M.1234567890"
+- Minimum: "DOE.JOHN" (2 parts)
+- Full: "DOE.JOHN.MICHAEL.1234567890" (4+ parts)
+
+API ENDPOINTS USED:
+------------------
+- GET /api/auth/me        - Fetches current user authentication data
+- POST /api/user/log-activity - Logs user activity with timestamp
+
+ERROR HANDLING:
+--------------
+All methods include try-catch blocks and return appropriate fallback values:
+- getCurrentUser() returns empty UserAuthInfo on error
+- logUserActivity() returns {success: false, error: string} on error
+- extractCertificateInfo() returns null on error
+
+DEPENDENCIES:
+------------
+- node-forge: For X.509 certificate parsing
+- fetch API: For HTTP requests
+
+SECURITY NOTES:
+--------------
+- Certificate data is expected in base64 format
+- All certificate parsing is done client-side
+- Username normalization uses lowercase conversion
+- Activity logging includes automatic timestamp generation
+
+===============================================================================
+*/

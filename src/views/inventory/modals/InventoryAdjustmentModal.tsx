@@ -50,16 +50,30 @@ const InventoryAdjustmentModal: React.FC<InventoryAdjustmentModalProps> = ({
   // Auto-populate technician field when modal opens
   useEffect(() => {
     if (open && !technician) {
-      certificateService
-        .getCurrentUser()
-        .then((user) => {
-          if (user.displayName) {
+      console.log('Modal opened, attempting to populate technician...');
+
+      const populateTechnician = async () => {
+        try {
+          const user = await certificateService.getCurrentUser();
+          console.log('Certificate service returned user:', user);
+
+          if (user?.displayName) {
+            console.log('Setting technician to:', user.displayName);
             setTechnician(user.displayName);
+          } else {
+            console.warn('No display name found in user data:', user);
+            // Fallback to username if displayName is not available
+            if (user?.username) {
+              setTechnician(user.username);
+            }
           }
-        })
-        .catch((error) => {
-          console.error('Failed to get current user:', error);
-        });
+        } catch (error) {
+          console.error('Failed to get current user from certificate service:', error);
+          // Don't show error to user for this, just log it
+        }
+      };
+
+      populateTechnician();
     }
   }, [open, technician]);
 
@@ -71,7 +85,38 @@ const InventoryAdjustmentModal: React.FC<InventoryAdjustmentModalProps> = ({
       handleClose();
     },
     onError: (error: any) => {
-      setError(error.message || 'Failed to adjust inventory');
+      console.error('Adjustment error:', error);
+      console.error('Error response:', error.response);
+      console.error('Error data:', error.response?.data);
+
+      // More detailed error handling
+      let errorMessage = 'Failed to adjust inventory';
+
+      if (error.response?.data) {
+        const responseData = error.response.data;
+
+        // Handle string error messages
+        if (typeof responseData === 'string') {
+          errorMessage = responseData;
+        }
+        // Handle object error responses
+        else if (typeof responseData === 'object') {
+          errorMessage =
+            responseData.message ||
+            responseData.error ||
+            responseData.details ||
+            JSON.stringify(responseData);
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      // Add status code context
+      if (error.response?.status) {
+        errorMessage = `${errorMessage} (Status: ${error.response.status})`;
+      }
+
+      setError(errorMessage);
     },
   });
 
@@ -113,15 +158,16 @@ const InventoryAdjustmentModal: React.FC<InventoryAdjustmentModalProps> = ({
     const finalReason = reasonCategory ? `${reasonCategory}: ${reason}` : reason;
 
     const adjustment: InventoryAdjustment = {
-      inventory_item_id: item.inventory_item_id.toString(),
-      adjustment_quantity: adjustmentType === 'add' ? quantity : -quantity,
-      adjustment_type: adjustmentType,
+      inventory_item_id: item.inventory_item_id, // Send as number instead of string
+      quantity_changed: adjustmentType === 'add' ? quantity : -quantity,
+      transaction_type: adjustmentType,
       reason: finalReason || undefined,
-      adjusted_by_user_name: technician,
+      user_name: technician,
       po_number: poNumber || undefined,
       notes: notes || undefined,
     };
 
+    console.log('Submitting adjustment:', adjustment); // Debug log
     adjustmentMutation.mutate(adjustment);
   };
 
@@ -207,6 +253,7 @@ const InventoryAdjustmentModal: React.FC<InventoryAdjustmentModalProps> = ({
             fullWidth
             required
             placeholder="Enter technician name"
+            InputProps={{ readOnly: true }}
           />
         </Box>
 

@@ -10,11 +10,11 @@ export interface InventoryItem {
 }
 
 export interface InventoryAdjustment {
-  inventory_item_id: string;
-  adjustment_quantity: number;
-  adjustment_type: 'add' | 'subtract';
+  inventory_item_id: string | number;
+  quantity_changed: number;
+  transaction_type: 'add' | 'subtract';
   reason?: string;
-  adjusted_by_user_name?: string;
+  user_name?: string;
   po_number?: string;
   notes?: string;
 }

@@ -148,7 +148,20 @@ export const adjustInventoryStock = async (adjustment: InventoryAdjustment): Pro
 
 export const fetchInventoryTransactions = async (inventoryItemId: string): Promise<InventoryTransaction[]> => {
   const { data } = await apiClient.get(`/inventory-items/${inventoryItemId}/transactions`);
-  return data;
+  
+  // Handle different response formats
+  if (Array.isArray(data)) {
+    return data;
+  }
+  
+  // If the response has a data property with an array
+  if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
+    return data.data;
+  }
+  
+  // Default to empty array if format is unexpected
+  console.warn('Unexpected transaction data format:', data);
+  return [];
 };
 
 export const getInventoryByProject = async (projectId: number): Promise<InventoryItem[]> => {

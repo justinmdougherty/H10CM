@@ -90,13 +90,45 @@ const TransactionHistoryModal: React.FC<TransactionHistoryModalProps> = ({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    if (!dateString) return '-';
+
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid Date';
+      }
+
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid Date';
+    }
+  };
+
+  const formatRelatedEntity = (transaction: InventoryTransaction) => {
+    if (!transaction.related_entity_id) return '-';
+
+    // If transaction is from project consumption, show project info
+    if (
+      transaction.transaction_type === 'out' &&
+      transaction.related_entity_id.startsWith('PRJ-')
+    ) {
+      return `Project: ${transaction.related_entity_id}`;
+    }
+
+    // If transaction has notes that indicate step consumption
+    if (transaction.notes?.includes('step')) {
+      return `${transaction.related_entity_id} (${transaction.notes})`;
+    }
+
+    return transaction.related_entity_id;
   };
 
   return (
@@ -153,7 +185,11 @@ const TransactionHistoryModal: React.FC<TransactionHistoryModalProps> = ({
                 ) : (
                   transactions.map((transaction) => (
                     <TableRow key={transaction.transaction_id} hover>
-                      <TableCell>{formatDate(transaction.transaction_date)}</TableCell>
+                      <TableCell>
+                        {transaction.transaction_date
+                          ? formatDate(transaction.transaction_date)
+                          : '-'}
+                      </TableCell>
                       <TableCell>
                         <Chip
                           label={getTransactionTypeLabel(transaction.transaction_type)}
@@ -170,7 +206,7 @@ const TransactionHistoryModal: React.FC<TransactionHistoryModalProps> = ({
                         </Typography>
                       </TableCell>
                       <TableCell>{transaction.notes || '-'}</TableCell>
-                      <TableCell>{transaction.related_entity_id || '-'}</TableCell>
+                      <TableCell>{formatRelatedEntity(transaction)}</TableCell>
                     </TableRow>
                   ))
                 )}

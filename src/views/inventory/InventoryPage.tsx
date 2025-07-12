@@ -30,6 +30,7 @@ import {
   SwapHoriz as ReplaceIcon,
   Refresh as RefreshIcon,
   History as HistoryIcon,
+  ShoppingCart as ReorderIcon,
 } from '@mui/icons-material';
 import PageContainer from 'src/components/container/PageContainer';
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
@@ -41,6 +42,8 @@ import EditInventoryModal from './modals/EditInventoryItemModal';
 import InventoryAdjustmentModal from './modals/InventoryAdjustmentModal';
 import PartReplacementModal from './modals/PartReplacementModal';
 import TransactionHistoryModal from './modals/TransactionHistoryModal';
+import InventoryStatsCards from './components/InventoryStatsCards';
+import { useCartStore, cartHelpers } from 'src/store/cartStore';
 
 const BCrumb = [{ to: '/', title: 'Home' }, { title: 'Inventory' }];
 
@@ -58,6 +61,7 @@ const InventoryPage = () => {
   // API returns { data: [...] }
   const inventoryItems = Array.isArray(data?.data) ? data.data : [];
   const deleteInventoryMutation = useDeleteInventoryItem();
+  const { addItem, openCart } = useCartStore();
 
   // Filter inventory items based on search term
   const filteredItems = inventoryItems.filter(
@@ -96,6 +100,37 @@ const InventoryPage = () => {
   const handleViewHistory = (item: InventoryItem) => {
     setSelectedItem(item);
     setTransactionHistoryModalOpen(true);
+  };
+
+  const handleReorderToCart = (item: InventoryItem) => {
+    // Check if item is already in cart
+    if (cartHelpers.isItemInCart(item.inventory_item_id)) {
+      // If already in cart, just open the cart
+      openCart();
+      return;
+    }
+
+    // Calculate suggested reorder quantity
+    const reorderPoint = item.reorder_point || 5;
+    const currentStock = item.current_stock_level;
+    const suggestedQuantity = Math.max(reorderPoint * 2 - currentStock, reorderPoint);
+
+    addItem({
+      type: 'reorder',
+      inventory_item_id: item.inventory_item_id,
+      item_name: item.item_name,
+      part_number: item.part_number || '',
+      description: item.description || '',
+      unit_of_measure: item.unit_of_measure,
+      quantity: suggestedQuantity,
+      estimated_cost: 10, // Default estimated cost
+      current_stock_level: item.current_stock_level,
+      reorder_point: item.reorder_point,
+      notes: `Reorder for ${item.item_name} - Current stock: ${currentStock}, Reorder point: ${reorderPoint}`,
+    });
+
+    // Open cart to show the added item
+    openCart();
   };
 
   const getStockLevelColor = (currentStock: number, minStock: number) => {
@@ -140,6 +175,9 @@ const InventoryPage = () => {
   return (
     <PageContainer title="Inventory" description="Inventory Management Page">
       <Breadcrumb title="Inventory" items={BCrumb} />
+
+      {/* Statistics Cards */}
+      <InventoryStatsCards inventoryItems={inventoryItems} isLoading={isLoading} />
 
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -290,6 +328,20 @@ const InventoryPage = () => {
                         </TableCell>
                         <TableCell>
                           <Box sx={{ display: 'flex', gap: 0.5 }}>
+                            <Tooltip title="Add to Reorder Cart">
+                              <IconButton
+                                size="small"
+                                color="info"
+                                onClick={() => handleReorderToCart(item)}
+                                sx={{
+                                  backgroundColor: cartHelpers.isItemInCart(item.inventory_item_id)
+                                    ? 'primary.light'
+                                    : 'transparent',
+                                }}
+                              >
+                                <ReorderIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
                             <Tooltip title="Add Stock">
                               <IconButton
                                 size="small"
