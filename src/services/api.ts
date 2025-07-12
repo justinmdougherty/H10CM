@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Project } from 'src/types/Project';
 import { InventoryItem, InventoryAdjustment, InventoryTransaction } from 'src/types/Inventory';
+import { BulkSubmissionResult } from 'src/types/Cart';
 import { ProductionUnit } from 'src/types/Production';
 import { ProjectStep } from 'src/types/ProjectSteps';
 import { AttributeDefinition } from 'src/types/AttributeDefinition'; // Assuming this type exists
@@ -144,6 +145,17 @@ export const updateInventoryItem = async (item: InventoryItem): Promise<Inventor
 
 export const adjustInventoryStock = async (adjustment: InventoryAdjustment): Promise<void> => {
   await apiClient.post('/inventory-items/adjust', adjustment);
+};
+
+// Bulk operations
+export const bulkAdjustInventoryStock = async (adjustments: InventoryAdjustment[]): Promise<BulkSubmissionResult> => {
+  const { data } = await apiClient.post('/inventory-items/bulk-adjust', { adjustments });
+  return data;
+};
+
+export const bulkAddInventoryItems = async (items: Omit<InventoryItem, 'inventory_item_id' | 'current_stock_level'>[]): Promise<BulkSubmissionResult> => {
+  const { data } = await apiClient.post('/inventory-items/bulk-add', { items });
+  return data;
 };
 
 export const fetchInventoryTransactions = async (inventoryItemId: string): Promise<InventoryTransaction[]> => {

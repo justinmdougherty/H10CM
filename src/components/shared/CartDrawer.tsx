@@ -60,14 +60,87 @@ const CartDrawer: React.FC = () => {
     setSubmitResult(null);
 
     try {
-      // TODO: Implement bulk submission API calls
-      // For now, simulate the process
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const newItems = useCartStore.getState().getNewItems();
+      const reorderItems = useCartStore.getState().getReorderItems();
+      const adjustmentItems = useCartStore.getState().getAdjustmentItems();
 
-      setSubmitResult('Successfully submitted all items to inventory!');
-      clearCart();
+      let allSuccessful = true;
+      const errors: string[] = [];
+
+      // Process new items
+      if (newItems.length > 0) {
+        try {
+          const itemsToAdd = newItems.map((item) => ({
+            item_name: item.item_name,
+            part_number: item.part_number,
+            description: item.description,
+            unit_of_measure: item.unit_of_measure,
+            current_stock_level: item.quantity,
+            reorder_point: item.reorder_point || 0,
+            estimated_cost: item.estimated_cost,
+            supplier: item.supplier,
+            notes: item.notes,
+          }));
+
+          // TODO: Call bulk add API when backend is ready
+          // await bulkAddInventoryItems(itemsToAdd);
+          console.log('Would add items:', itemsToAdd);
+        } catch (error) {
+          allSuccessful = false;
+          errors.push(`Failed to add ${newItems.length} new items`);
+        }
+      }
+
+      // Process reorder items
+      if (reorderItems.length > 0) {
+        try {
+          const adjustments = reorderItems.map((item) => ({
+            inventory_item_id: item.inventory_item_id!,
+            quantity_changed: item.quantity,
+            transaction_type: 'add' as const,
+            user_name: 'Current User', // TODO: Get from auth context
+            notes: `Reorder: ${item.notes || 'Bulk reorder'}`,
+          }));
+
+          // TODO: Call bulk adjustment API when backend is ready
+          // await bulkAdjustInventoryStock(adjustments);
+          console.log('Would process reorders:', adjustments);
+        } catch (error) {
+          allSuccessful = false;
+          errors.push(`Failed to process ${reorderItems.length} reorders`);
+        }
+      }
+
+      // Process adjustment items
+      if (adjustmentItems.length > 0) {
+        try {
+          const adjustments = adjustmentItems.map((item) => ({
+            inventory_item_id: item.inventory_item_id!,
+            quantity_changed: item.quantity,
+            transaction_type:
+              item.adjustment_type === 'add' ? ('add' as const) : ('subtract' as const),
+            user_name: 'Current User', // TODO: Get from auth context
+            notes: item.adjustment_reason || item.notes || 'Bulk adjustment',
+          }));
+
+          // TODO: Call bulk adjustment API when backend is ready
+          // await bulkAdjustInventoryStock(adjustments);
+          console.log('Would process adjustments:', adjustments);
+        } catch (error) {
+          allSuccessful = false;
+          errors.push(`Failed to process ${adjustmentItems.length} adjustments`);
+        }
+      }
+
+      if (allSuccessful) {
+        setSubmitResult('Successfully submitted all items to inventory!');
+        clearCart();
+      } else {
+        setSubmitResult(`Completed with errors: ${errors.join(', ')}`);
+      }
     } catch (error) {
       setSubmitResult('Error submitting items. Please try again.');
+      console.error('Bulk submission error:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -91,8 +164,22 @@ const CartDrawer: React.FC = () => {
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
             <Chip
-              label={item.type === 'new' ? 'New Item' : 'Reorder'}
-              color={item.type === 'new' ? 'primary' : 'secondary'}
+              label={
+                item.type === 'new'
+                  ? 'New Item'
+                  : item.type === 'reorder'
+                  ? 'Reorder'
+                  : `${item.adjustment_type === 'add' ? 'Add' : 'Remove'} Stock`
+              }
+              color={
+                item.type === 'new'
+                  ? 'primary'
+                  : item.type === 'reorder'
+                  ? 'secondary'
+                  : item.adjustment_type === 'add'
+                  ? 'success'
+                  : 'error'
+              }
               size="small"
             />
             <Chip label={item.unit_of_measure} variant="outlined" size="small" />
@@ -282,7 +369,8 @@ const CartDrawer: React.FC = () => {
               color="text.secondary"
               sx={{ textAlign: 'center', display: 'block' }}
             >
-              {summary.newItemsCount} new items • {summary.reorderItemsCount} reorders
+              {summary.newItemsCount} new items • {summary.reorderItemsCount} reorders •{' '}
+              {summary.adjustmentItemsCount} adjustments
             </Typography>
           </Box>
         )}

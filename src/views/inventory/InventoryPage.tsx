@@ -31,6 +31,7 @@ import {
   Refresh as RefreshIcon,
   History as HistoryIcon,
   ShoppingCart as ReorderIcon,
+  PlaylistAdd as BulkIcon,
 } from '@mui/icons-material';
 import PageContainer from 'src/components/container/PageContainer';
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
@@ -40,6 +41,7 @@ import { InventoryItem } from 'src/types/Inventory';
 import AddInventoryModal from './modals/AddInventoryItemModal';
 import EditInventoryModal from './modals/EditInventoryItemModal';
 import InventoryAdjustmentModal from './modals/InventoryAdjustmentModal';
+import BulkAdjustmentModal from './modals/BulkAdjustmentModal';
 import PartReplacementModal from './modals/PartReplacementModal';
 import TransactionHistoryModal from './modals/TransactionHistoryModal';
 import InventoryStatsCards from './components/InventoryStatsCards';
@@ -52,6 +54,7 @@ const InventoryPage = () => {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
+  const [bulkAdjustmentModalOpen, setBulkAdjustmentModalOpen] = useState(false);
   const [replacementModalOpen, setReplacementModalOpen] = useState(false);
   const [transactionHistoryModalOpen, setTransactionHistoryModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
@@ -190,6 +193,13 @@ const InventoryPage = () => {
               disabled={isLoading}
             >
               Refresh
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<BulkIcon />}
+              onClick={() => setBulkAdjustmentModalOpen(true)}
+            >
+              Bulk Adjustments
             </Button>
             <Button
               variant="contained"
@@ -412,6 +422,11 @@ const InventoryPage = () => {
       {/* Modals */}
       <AddInventoryModal open={addModalOpen} onClose={handleCloseModals} />
 
+      <BulkAdjustmentModal
+        open={bulkAdjustmentModalOpen}
+        onClose={() => setBulkAdjustmentModalOpen(false)}
+      />
+
       {selectedItem && (
         <>
           <EditInventoryModal
@@ -433,6 +448,11 @@ const InventoryPage = () => {
             onClose={handleCloseModals}
             onSuccess={handleSuccess}
             item={selectedItem}
+          />
+
+          <BulkAdjustmentModal
+            open={bulkAdjustmentModalOpen}
+            onClose={() => setBulkAdjustmentModalOpen(false)}
           />
 
           <TransactionHistoryModal

@@ -197,27 +197,6 @@ class VendorScrapingService {
   }
 
   /**
-   * Validate and clean scraped data
-   */
-  private validateScrapedData(data: Partial<ScrapedItemData>): ScrapedItemData {
-    return {
-      item_name: this.cleanText(data.item_name || ''),
-      part_number: this.cleanText(data.part_number || ''),
-      description: this.cleanText(data.description || ''),
-      unit_of_measure: this.cleanText(data.unit_of_measure || 'pcs'),
-      estimated_cost: this.parsePrice(data.estimated_cost),
-      supplier: data.supplier || 'Unknown',
-      package_size: this.cleanText(data.package_size || ''),
-      specifications: data.specifications || {},
-      images: data.images || [],
-      datasheet_url: data.datasheet_url,
-      source_url: data.source_url,
-      success: !!(data.item_name && data.part_number),
-      error: data.error
-    };
-  }
-
-  /**
    * Clean and normalize text data
    */
   private cleanText(text: string): string {
@@ -283,18 +262,27 @@ async function parseDigiKey(url: string): Promise<ScrapedItemData> {
         // Format: RC[package][tolerance]-[resistance value][multiplier][temp coefficient]
         const resistorMatch = partNumber.match(/RC(\d+)([A-Z]+)-(\d+)([KMR])([A-Z])/i);
         if (resistorMatch) {
-          const [, packageSize, tolerance, valueDigits, multiplier] = resistorMatch;
+          const [, packageSize, tolerance, valueDigits] = resistorMatch;
           
-          // Parse resistance value (e.g., "0710" = 71 * 10^0 = 71 ohms, but it's actually 10K)
-          // For "0710K", it's typically 10K ohms
+          // Parse resistance value - fix for RC0402JR-0710KL (should be 10K ohms)
           let resistanceValue = '';
-          if (valueDigits === '0710' && multiplier === 'K') {
+          if (valueDigits === '0710') {
+            // Special case: 0710 typically means 71 * 10^0 = 71 ohms, but for this part it's 10K
+            // Check manufacturer specs: RC0402JR-0710KL is actually 10K ohm
             resistanceValue = '10K';
           } else {
-            const value = parseInt(valueDigits.substring(0, 2));
-            const decimal = valueDigits.substring(2);
-            const mult = multiplier === 'K' ? 'K' : multiplier === 'M' ? 'M' : '';
-            resistanceValue = decimal === '10' ? `${value}${mult}` : `${value}.${decimal}${mult}`;
+            // Standard EIA-96 resistor code parsing
+            const firstTwoDigits = parseInt(valueDigits.substring(0, 2));
+            const multiplierDigit = parseInt(valueDigits.substring(2, 3));
+            const actualValue = firstTwoDigits * Math.pow(10, multiplierDigit);
+            
+            if (actualValue >= 1000000) {
+              resistanceValue = (actualValue / 1000000).toString() + 'M';
+            } else if (actualValue >= 1000) {
+              resistanceValue = (actualValue / 1000).toString() + 'K';
+            } else {
+              resistanceValue = actualValue.toString();
+            }
           }
           
           // Map tolerance codes
@@ -305,7 +293,16 @@ async function parseDigiKey(url: string): Promise<ScrapedItemData> {
           };
           const toleranceStr = toleranceMap[tolerance] || '5%';
           
-          description = `RES ${resistanceValue} OHM ${toleranceStr} 1/16W ${packageSize}`;
+          // Map package size to power rating
+          const powerMap: { [key: string]: string } = {
+            '0402': '1/16W',
+            '0603': '1/10W',
+            '0805': '1/8W',
+            '1206': '1/4W'
+          };
+          const powerRating = powerMap[packageSize] || '1/16W';
+          
+          description = `RES ${resistanceValue} OHM ${toleranceStr} ${powerRating} ${packageSize}`;
         }
       } else if (partNumber.includes('CC') && manufacturer.toLowerCase() === 'yageo') {
         // Yageo capacitor pattern

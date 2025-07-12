@@ -21,6 +21,7 @@ interface CartStore {
   getCartSummary: () => CartSummary;
   getNewItems: () => CartItem[];
   getReorderItems: () => CartItem[];
+  getAdjustmentItems: () => CartItem[];
 }
 
 export const useCartStore = create<CartStore>()(
@@ -98,8 +99,10 @@ export const useCartStore = create<CartStore>()(
             
             if (item.type === 'new') {
               acc.newItemsCount += 1;
-            } else {
+            } else if (item.type === 'reorder') {
               acc.reorderItemsCount += 1;
+            } else if (item.type === 'adjustment') {
+              acc.adjustmentItemsCount += 1;
             }
             
             return acc;
@@ -110,6 +113,7 @@ export const useCartStore = create<CartStore>()(
             estimatedTotalCost: 0,
             newItemsCount: 0,
             reorderItemsCount: 0,
+            adjustmentItemsCount: 0,
           }
         );
 
@@ -122,6 +126,10 @@ export const useCartStore = create<CartStore>()(
 
       getReorderItems: () => {
         return get().items.filter((item) => item.type === 'reorder');
+      },
+
+      getAdjustmentItems: () => {
+        return get().items.filter((item) => item.type === 'adjustment');
       },
     }),
     {

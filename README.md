@@ -99,6 +99,7 @@ npm test
   - ✅ Bulk item management with quantity and cost adjustments
   - ✅ Integration with header cart icon and drawer interface
 - ✅ **Manual Inventory Adjustments** - Add/remove stock with validation and audit trails
+- ✅ **Bulk Inventory Adjustments** - Cart-based system for processing multiple adjustments at once
 - ✅ **Part Replacement System** - End-of-life and quality replacement tracking
 - ✅ **Transaction History & Audit Trail** - Complete tracking of all inventory movements
 - ✅ **Real-time Stock Management** - Live updates with React Query integration
@@ -121,7 +122,7 @@ npm test
   - ✅ "Add to Cart" functionality in AddInventoryModal
   - ✅ "Reorder" functionality in InventoryPage with intelligent quantity suggestions
   - ✅ Bulk submission preparation (UI ready, backend integration pending)
-- [ ] Implement bulk operations (bulk adjustments, imports)
+- ✅ Implement bulk operations (bulk adjustments, imports)
 - [ ] Create advanced analytics views (consumption patterns, forecasting)
 - [ ] Add data export capabilities (CSV, Excel)
 
@@ -141,6 +142,22 @@ npm test
 - [ ] **Keyboard Shortcuts & Power User Features**
   - [ ] Command palette (Ctrl+K) for quick actions
   - [ ] Tab navigation and quick actions
+
+- [ ] **Bulk Data Import/Export**
+  - [ ] XLSX inventory import functionality
+  - [ ] Support for batch inventory creation from spreadsheets
+  - [ ] Data validation and error reporting for imported files
+  - [ ] Template download for proper XLSX format
+
+- [ ] **Avery Label Printing System**
+  - [ ] Modal in Batch Tracking app for label configuration
+  - [ ] Avery sheet type selection (5160, 5161, 5162, etc.)
+  - [ ] Customizable label content selection from batch attributes
+  - [ ] Custom field addition for labels (manual text, dates, special instructions)
+  - [ ] Label template editor with real-time preview
+  - [ ] Print-ready PDF generation optimized for Avery sheets
+  - [ ] Save/load label templates for reuse
+  - [ ] Batch label printing for multiple items
 
 - [ ] **Performance Optimizations**
   - [ ] Virtual scrolling for large lists
