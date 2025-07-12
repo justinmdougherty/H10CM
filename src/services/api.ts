@@ -7,6 +7,8 @@ import { ProjectStep } from 'src/types/ProjectSteps';
 import { AttributeDefinition } from 'src/types/AttributeDefinition'; // Assuming this type exists
 import { StepInventoryRequirement } from 'src/types/StepInventoryRequirement'; // Assuming this type exists
 import { TrackedItem, TrackedItemAttribute, TrackedItemStepProgress } from 'src/types/TrackedItem';
+import { PendingOrderItem, PendingOrderSummary, ReceiveItemsRequest, PendingOrderStatus } from '../types/PendingOrders';
+import smartNotifications from './smartNotificationService';
 
 // The base URL will be handled by the Vite proxy you have set up
 const apiClient = axios.create({
@@ -251,4 +253,255 @@ export const fetchTrackedItemsOverviewView = async (): Promise<any[]> => {
 export const fetchStepProgressStatusView = async (): Promise<any[]> => {
   const { data } = await apiClient.get('/views/step-progress-status');
   return data;
+};
+
+// Pending Orders API
+export const fetchPendingOrders = async (): Promise<PendingOrderItem[]> => {
+  // TODO: Replace with actual API call when backend is ready
+  // For now, use localStorage as temporary storage
+  try {
+    const orders = JSON.parse(localStorage.getItem('pendingOrders') || '[]');
+    console.log('Fetched pending orders (localStorage):', orders);
+    return orders;
+  } catch (error) {
+    console.error('Error fetching pending orders:', error);
+    return [];
+  }
+  
+  // Original API call (commented out for now)
+  // const { data } = await apiClient.get('/pending-orders');
+  // return data;
+};
+
+export const createPendingOrders = async (items: Omit<PendingOrderItem, 'pending_order_id' | 'quantity_received' | 'date_requested' | 'status'>[]): Promise<BulkSubmissionResult> => {
+  // TODO: Replace with actual API call when backend is ready
+  // For now, use localStorage as temporary storage
+  try {
+    const existingOrders = JSON.parse(localStorage.getItem('pendingOrders') || '[]');
+    const updatedOrders = [...existingOrders];
+    const newOrders: any[] = [];
+    
+    items.forEach(item => {
+      // Look for existing pending order with same item details
+      const existingIndex = updatedOrders.findIndex((order: PendingOrderItem) => 
+        order.item_name === item.item_name &&
+        order.part_number === item.part_number &&
+        order.supplier === item.supplier &&
+        order.status === 'requested' // Only combine with requested orders
+      );
+      
+      if (existingIndex !== -1) {
+        // Update existing order by adding quantities
+        updatedOrders[existingIndex] = {
+          ...updatedOrders[existingIndex],
+          quantity_requested: updatedOrders[existingIndex].quantity_requested + item.quantity_requested,
+          estimated_cost: (updatedOrders[existingIndex].estimated_cost || 0) + (item.estimated_cost || 0),
+          notes: `${updatedOrders[existingIndex].notes || ''}\nAdded ${item.quantity_requested} ${item.unit_of_measure} from bulk submission`.trim(),
+        };
+        
+        console.log(`Combined ${item.quantity_requested} ${item.unit_of_measure} of ${item.item_name} with existing order`);
+      } else {
+        // Create new order
+        const newOrder = {
+          ...item,
+          pending_order_id: Date.now() + Math.random(), // Simple ID generation
+          quantity_received: 0,
+          date_requested: new Date(),
+          status: 'requested' as PendingOrderStatus,
+        };
+        
+        updatedOrders.push(newOrder);
+        newOrders.push(newOrder);
+
+        // Create notification for new order
+        smartNotifications.createNotification({
+          type: 'info',
+          category: 'orders',
+          title: 'New Order Requested',
+          message: `Request for ${item.quantity_requested} ${item.unit_of_measure} of ${item.item_name}`,
+          actionRequired: false,
+          relatedEntityType: 'order',
+          relatedEntityId: newOrder.pending_order_id,
+          actionUrl: '/orders/pending',
+          actionLabel: 'View Orders',
+          metadata: { 
+            itemName: item.item_name,
+            quantity: item.quantity_requested,
+            unitOfMeasure: item.unit_of_measure,
+            supplier: item.supplier
+          },
+          icon: '📝',
+        });
+      }
+    });
+    
+    localStorage.setItem('pendingOrders', JSON.stringify(updatedOrders));
+    
+    console.log('Created/updated pending orders (localStorage):', { newOrders, totalOrders: updatedOrders.length });
+    
+    return {
+      success: true,
+      message: `Successfully processed ${items.length} pending orders (${newOrders.length} new, ${items.length - newOrders.length} combined with existing)`,
+      successfulItems: newOrders.map(order => order.pending_order_id.toString()),
+      failedItems: []
+    };
+  } catch (error) {
+    console.error('Error creating pending orders:', error);
+    throw new Error('Failed to create pending orders');
+  }
+  
+  // Original API call (commented out for now)
+  // const { data } = await apiClient.post('/pending-orders/bulk-create', { items });
+  // return data;
+};
+
+export const updatePendingOrderStatus = async (
+  pending_order_id: number, 
+  status: PendingOrderStatus, 
+  notes?: string
+): Promise<PendingOrderItem> => {
+  // TODO: Replace with actual API call when backend is ready
+  // For now, use localStorage as temporary storage
+  try {
+    const orders = JSON.parse(localStorage.getItem('pendingOrders') || '[]');
+    const updatedOrders = orders.map((order: PendingOrderItem) => {
+      if (order.pending_order_id === pending_order_id) {
+        const oldStatus = order.status;
+        const updatedOrder = {
+          ...order,
+          status,
+          notes: notes || order.notes,
+        };
+
+        // Set appropriate date and user fields based on status
+        if (status === 'ordered' && order.status === 'requested') {
+          updatedOrder.date_ordered = new Date();
+          updatedOrder.ordered_by = 'Current User'; // Will be updated with real user in component
+        } else if (status === 'shipped' && (order.status === 'ordered' || order.status === 'requested')) {
+          updatedOrder.date_shipped = new Date();
+          updatedOrder.shipped_by = 'Current User'; // Will be updated with real user in component
+        }
+
+        // Create notification for status change
+        smartNotifications.notifyOrderStatusChange(updatedOrder, oldStatus);
+
+        return updatedOrder;
+      }
+      return order;
+    });
+    
+    localStorage.setItem('pendingOrders', JSON.stringify(updatedOrders));
+    const updatedOrder = updatedOrders.find((order: PendingOrderItem) => order.pending_order_id === pending_order_id);
+    console.log('Updated order status (localStorage):', updatedOrder);
+    
+    return updatedOrder;
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    throw new Error('Failed to update order status');
+  }
+  
+  // Original API call (commented out for now)
+  // const { data } = await apiClient.patch(`/pending-orders/${pending_order_id}/status`, { 
+  //   status, 
+  //   notes 
+  // });
+  // return data;
+};
+
+export const receiveOrderItems = async (request: ReceiveItemsRequest): Promise<BulkSubmissionResult> => {
+  // TODO: Replace with actual API call when backend is ready
+  // For now, use localStorage as temporary storage
+  try {
+    const orders = JSON.parse(localStorage.getItem('pendingOrders') || '[]');
+    const updatedOrders: PendingOrderItem[] = [];
+    
+    orders.forEach((order: PendingOrderItem) => {
+      const receivedItem = request.items.find(item => item.pending_order_id === order.pending_order_id);
+      
+      if (receivedItem && receivedItem.quantity_received > 0) {
+        const remainingQty = order.quantity_requested - order.quantity_received - receivedItem.quantity_received;
+        
+        if (remainingQty > 0) {
+          // Create new order for remaining quantity
+          const remainingOrder = {
+            ...order,
+            pending_order_id: Date.now() + Math.random(), // New ID for remaining order
+            quantity_requested: remainingQty,
+            quantity_received: 0,
+            status: 'requested' as PendingOrderStatus,
+            notes: `Split from partial receipt of order #${order.pending_order_id}. Original qty: ${order.quantity_requested}, previously received: ${order.quantity_received}, this receipt: ${receivedItem.quantity_received}, remaining: ${remainingQty}`,
+            date_requested: new Date(), // Reset request date for new order
+          };
+          updatedOrders.push(remainingOrder);
+        }
+        
+        // Mark original order as received with actual received quantity
+        const completedOrder = {
+          ...order,
+          quantity_received: order.quantity_received + receivedItem.quantity_received,
+          status: 'received' as PendingOrderStatus,
+          date_received: new Date(),
+          received_by: request.received_by || 'Unknown User',
+          notes: receivedItem.notes ? `${order.notes || ''}\n${receivedItem.notes}`.trim() : order.notes,
+        };
+        updatedOrders.push(completedOrder);
+        
+        // Create notification for received order
+        smartNotifications.createNotification({
+          type: 'success',
+          category: 'orders',
+          title: remainingQty > 0 ? 'Partial Order Received' : 'Order Received',
+          message: `Received ${receivedItem.quantity_received} ${order.unit_of_measure} of ${order.item_name}${remainingQty > 0 ? ` (${remainingQty} still pending)` : ''}`,
+          actionRequired: false,
+          relatedEntityType: 'order',
+          relatedEntityId: order.pending_order_id,
+          actionUrl: '/orders/pending',
+          actionLabel: 'View Orders',
+          metadata: { 
+            itemName: order.item_name,
+            quantityReceived: receivedItem.quantity_received,
+            quantityRemaining: remainingQty,
+            isPartial: remainingQty > 0
+          },
+          icon: remainingQty > 0 ? '📦' : '✅',
+        });
+        
+        // TODO: Add the received quantity to actual inventory here
+        console.log(`TODO: Add ${receivedItem.quantity_received} ${order.unit_of_measure} of ${order.item_name} to inventory`);
+        
+      } else {
+        // Keep unchanged orders
+        updatedOrders.push(order);
+      }
+    });
+    
+    localStorage.setItem('pendingOrders', JSON.stringify(updatedOrders));
+    console.log('Updated received items with split orders (localStorage):', updatedOrders);
+    
+    // Count successful items
+    const processedItems = request.items.filter(item => item.quantity_received > 0);
+    
+    return {
+      success: true,
+      message: `Successfully received ${processedItems.length} items. Partial receipts created separate orders for remaining quantities.`,
+      successfulItems: processedItems.map(item => item.pending_order_id.toString()),
+      failedItems: []
+    };
+  } catch (error) {
+    console.error('Error receiving items:', error);
+    throw new Error('Failed to receive items');
+  }
+  
+  // Original API call (commented out for now)
+  // const { data } = await apiClient.post('/pending-orders/receive', request);
+  // return data;
+};
+
+export const getPendingOrdersSummary = async (): Promise<PendingOrderSummary> => {
+  const { data } = await apiClient.get('/pending-orders/summary');
+  return data;
+};
+
+export const deletePendingOrder = async (pending_order_id: number): Promise<void> => {
+  await apiClient.delete(`/pending-orders/${pending_order_id}`);
 };

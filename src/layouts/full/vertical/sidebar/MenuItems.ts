@@ -24,6 +24,7 @@ import {
   IconNotes,          // For Notes
   IconSettings,       // For Project Management
   IconHeartbeat,      // For Health Dashboard
+  IconShoppingCart,   // For Pending Orders
 } from '@tabler/icons-react';
 
 const Menuitems: MenuitemsType[] = [
@@ -52,6 +53,12 @@ const Menuitems: MenuitemsType[] = [
     title: 'Inventory',
     icon: IconClipboardList, // Example icon
     href: '/inventory',
+  },
+  {
+    id: uniqueId(),
+    title: 'Pending Orders',
+    icon: IconShoppingCart,
+    href: '/orders/pending',
   },
   {
     navlabel: true,

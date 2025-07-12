@@ -26,6 +26,10 @@ const TicketsPage = Loadable(lazy(() => import('../views/apps/tickets/Tickets'))
 const HealthDashboard = Loadable(lazy(() => import('../views/system/HealthDashboard')));
 const SearchResultsPage = Loadable(lazy(() => import('../views/search/SearchResultsPage')));
 const SearchSystemDemo = Loadable(lazy(() => import('../components/shared/SearchSystemDemo')));
+const PendingOrdersPage = Loadable(lazy(() => import('../views/orders/PendingOrdersPage')));
+const NotificationTestComponent = Loadable(
+  lazy(() => import('../components/shared/NotificationTestComponent')),
+);
 
 const Router = [
   {
@@ -38,12 +42,14 @@ const Router = [
       { path: '/project/:projectId', element: <ProjectDetailPage /> },
       // Add new routes
       { path: '/inventory', element: <InventoryPage /> },
+      { path: '/orders/pending', element: <PendingOrdersPage /> },
       { path: '/apps/notes', element: <NotesPage /> },
       { path: '/apps/calendar', element: <CalendarPage /> },
       { path: '/apps/tickets', element: <TicketsPage /> },
       { path: '/system/health', element: <HealthDashboard /> },
       { path: '/search', element: <SearchResultsPage /> },
       { path: '/search/demo', element: <SearchSystemDemo /> },
+      { path: '/notifications/test', element: <NotificationTestComponent /> },
 
       { path: '*', element: <Navigate to="/auth/404" /> },
     ],

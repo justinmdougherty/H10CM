@@ -28,7 +28,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         </Suspense>
       </CustomizerContextProvider>
       {/* The devtools are recommended for a better development experience */}
-      <ReactQueryDevtools initialIsOpen={false} />
+      {/* <ReactQueryDevtools initialIsOpen={false} /> */}
     </QueryClientProvider>
   </React.StrictMode>,
 );

@@ -25,6 +25,8 @@ import {
 } from '@mui/icons-material';
 import { useCartStore, cartHelpers } from 'src/store/cartStore';
 import { CartItem } from 'src/types/Cart';
+import { createPendingOrders } from 'src/services/api';
+import certificateService from 'src/services/certificateService';
 
 const CartDrawer: React.FC = () => {
   const theme = useTheme();
@@ -91,23 +93,35 @@ const CartDrawer: React.FC = () => {
         }
       }
 
-      // Process reorder items
+      // Process reorder items - create pending orders instead of direct adjustments
       if (reorderItems.length > 0) {
         try {
-          const adjustments = reorderItems.map((item) => ({
-            inventory_item_id: item.inventory_item_id!,
-            quantity_changed: item.quantity,
-            transaction_type: 'add' as const,
-            user_name: 'Current User', // TODO: Get from auth context
-            notes: `Reorder: ${item.notes || 'Bulk reorder'}`,
-          }));
+          // Get current user from certificate service
+          const currentUser = await certificateService.getCurrentUser();
 
-          // TODO: Call bulk adjustment API when backend is ready
-          // await bulkAdjustInventoryStock(adjustments);
-          console.log('Would process reorders:', adjustments);
+          const pendingOrderItems = reorderItems
+            .filter((item) => item.inventory_item_id) // Only process items with valid IDs
+            .map((item) => ({
+              item_name: item.item_name,
+              part_number: item.part_number || '',
+              quantity_requested: item.quantity,
+              unit_of_measure: item.unit_of_measure,
+              supplier: item.supplier || '',
+              estimated_cost: item.estimated_cost || 0,
+              notes: item.notes || 'Bulk reorder request',
+              inventory_item_id: item.inventory_item_id!,
+              requested_by: currentUser.displayName || 'Unknown User',
+            }));
+
+          await createPendingOrders(pendingOrderItems);
+          console.log('Created pending orders for:', pendingOrderItems);
         } catch (error) {
           allSuccessful = false;
-          errors.push(`Failed to process ${reorderItems.length} reorders`);
+          console.error('Pending orders creation error:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          errors.push(
+            `Failed to create pending orders for ${reorderItems.length} items: ${errorMessage}`,
+          );
         }
       }
 
@@ -133,7 +147,14 @@ const CartDrawer: React.FC = () => {
       }
 
       if (allSuccessful) {
-        setSubmitResult('Successfully submitted all items to inventory!');
+        let successMsg = 'Successfully processed all items! ';
+        if (newItems.length > 0) successMsg += `${newItems.length} new items added to inventory. `;
+        if (reorderItems.length > 0)
+          successMsg += `${reorderItems.length} reorder requests sent to pending orders. `;
+        if (adjustmentItems.length > 0)
+          successMsg += `${adjustmentItems.length} inventory adjustments made.`;
+
+        setSubmitResult(successMsg);
         clearCart();
       } else {
         setSubmitResult(`Completed with errors: ${errors.join(', ')}`);
