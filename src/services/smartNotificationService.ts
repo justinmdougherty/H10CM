@@ -466,6 +466,82 @@ class SmartNotificationService {
   }
 
   // ============================================================================
+  // TASK ASSIGNMENT NOTIFICATIONS
+  // ============================================================================
+
+  async createTaskAssignmentNotification(
+    taskTitle: string,
+    assignedTo: string,
+    assignedBy: string,
+    priority: 'Low' | 'Medium' | 'High' | 'Critical',
+    dueDate?: Date,
+    projectId?: string
+  ): Promise<NotificationItem> {
+    const priorityEmojis = {
+      'Low': '🟢',
+      'Medium': '🟡', 
+      'High': '🟠',
+      'Critical': '🔴'
+    };
+
+    const dueDateText = dueDate ? ` (Due: ${dueDate.toLocaleDateString()})` : '';
+    
+    return this.createNotification({
+      type: priority === 'Critical' ? 'critical' : priority === 'High' ? 'warning' : 'info',
+      category: 'user',
+      title: `New Task Assigned: ${taskTitle}`,
+      message: `${assignedBy} has assigned you a ${priority.toLowerCase()} priority task${dueDateText}`,
+      isImportant: priority === 'Critical' || priority === 'High',
+      actionRequired: true,
+      actionUrl: '/my-tasks',
+      actionLabel: 'View My Tasks',
+      userId: assignedTo,
+      icon: priorityEmojis[priority],
+      metadata: {
+        taskTitle,
+        assignedBy,
+        priority,
+        dueDate: dueDate?.toISOString(),
+        projectId,
+        notificationType: 'task_assignment'
+      }
+    });
+  }
+
+  async createTaskUpdateNotification(
+    taskTitle: string,
+    userId: string,
+    status: string,
+    updatedBy: string
+  ): Promise<NotificationItem> {
+    const statusEmojis = {
+      'Completed': '✅',
+      'In Progress': '⏳',
+      'On Hold': '⏸️',
+      'Cancelled': '❌'
+    };
+
+    return this.createNotification({
+      type: status === 'Completed' ? 'success' : 'info',
+      category: 'user',
+      title: `Task Updated: ${taskTitle}`,
+      message: `${updatedBy} updated the task status to "${status}"`,
+      isImportant: false,
+      actionRequired: false,
+      actionUrl: '/my-tasks',
+      actionLabel: 'View Tasks',
+      userId: userId,
+      icon: statusEmojis[status as keyof typeof statusEmojis] || '📝',
+      metadata: {
+        taskTitle,
+        status,
+        updatedBy,
+        notificationType: 'task_update'
+      }
+    });
+  }
+
+  // ============================================================================
   // CLEANUP & MAINTENANCE
   // ============================================================================
 

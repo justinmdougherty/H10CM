@@ -505,3 +505,112 @@ export const getPendingOrdersSummary = async (): Promise<PendingOrderSummary> =>
 export const deletePendingOrder = async (pending_order_id: number): Promise<void> => {
   await apiClient.delete(`/pending-orders/${pending_order_id}`);
 };
+
+// --- Task Management API Functions ---
+import { TaskItem, CreateTaskRequest, UpdateTaskRequest, TaskStatistics, UserTaskSummary } from 'src/types/Task';
+
+export const fetchTasks = async (): Promise<TaskItem[]> => {
+  // This would typically fetch from /api/tasks
+  // For now, return mock data
+  return [];
+};
+
+export const fetchTasksByProject = async (projectId: string): Promise<TaskItem[]> => {
+  // This would typically fetch from /api/projects/{projectId}/tasks
+  // For now, return mock data
+  return [];
+};
+
+export const fetchTasksByUser = async (userId: string): Promise<TaskItem[]> => {
+  // This would typically fetch from /api/users/{userId}/tasks
+  // For now, return mock data
+  return [];
+};
+
+export const createTask = async (task: CreateTaskRequest): Promise<TaskItem> => {
+  // This would typically call POST /api/tasks
+  // For now, return mock task
+  const mockTask: TaskItem = {
+    task_id: Date.now().toString(),
+    ...task,
+    assigned_by: 'current-user', // Would come from auth context
+    status: 'Pending',
+    created_date: new Date(),
+    updated_date: new Date(),
+  };
+  
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  console.log('Created task:', mockTask);
+  return mockTask;
+};
+
+export const updateTask = async (taskId: string, updates: Partial<TaskItem>): Promise<TaskItem> => {
+  // This would typically call PUT /api/tasks/{taskId}
+  // For now, return mock updated task
+  const mockUpdatedTask: TaskItem = {
+    task_id: taskId,
+    title: 'Mock Task',
+    priority: 'Medium',
+    status: 'Pending',
+    category: 'General',
+    assigned_to: '',
+    assigned_by: '',
+    created_date: new Date(),
+    updated_date: new Date(),
+    ...updates,
+  };
+  
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
+  console.log('Updated task:', taskId, updates);
+  return mockUpdatedTask;
+};
+
+export const deleteTask = async (taskId: string): Promise<void> => {
+  // This would typically call DELETE /api/tasks/{taskId}
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
+  console.log('Deleted task:', taskId);
+};
+
+export const getTaskStatistics = async (): Promise<TaskStatistics> => {
+  // This would typically fetch from /api/tasks/statistics
+  const mockStats: TaskStatistics = {
+    total_tasks: 0,
+    pending_tasks: 0,
+    in_progress_tasks: 0,
+    completed_tasks: 0,
+    overdue_tasks: 0,
+    high_priority_tasks: 0,
+    tasks_by_category: {
+      Production: 0,
+      Inventory: 0,
+      Quality: 0,
+      Planning: 0,
+      Maintenance: 0,
+      General: 0,
+    },
+    tasks_by_user: {},
+  };
+  
+  return mockStats;
+};
+
+export const getUserTaskSummary = async (userId: string): Promise<UserTaskSummary> => {
+  // This would typically fetch from /api/users/{userId}/task-summary
+  const mockSummary: UserTaskSummary = {
+    user_id: userId,
+    username: 'mock-user',
+    pending_tasks: [],
+    in_progress_tasks: [],
+    overdue_tasks: [],
+    completed_today: 0,
+    total_assigned: 0,
+  };
+  
+  return mockSummary;
+};

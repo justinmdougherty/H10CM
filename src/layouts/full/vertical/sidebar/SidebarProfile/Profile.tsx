@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { Box, Avatar, Typography, useMediaQuery, CircularProgress } from '@mui/material';
 import { CustomizerContext } from 'src/context/CustomizerContext';
+import { useRBAC } from 'src/context/RBACContext';
 import certificateService, { UserAuthInfo } from 'src/services/certificateService'; // Import service and type
 
 // Helper function to get initials
@@ -34,6 +35,7 @@ const stringToColor = (string: string) => {
 
 export const Profile = () => {
   const { isSidebarHover, isCollapse } = useContext(CustomizerContext);
+  const { currentUser } = useRBAC();
   const lgUp = useMediaQuery((theme: any) => theme.breakpoints.up('lg'));
   const hideMenu = lgUp ? isCollapse === 'mini-sidebar' && !isSidebarHover : false; // Corrected comparison
 
@@ -59,11 +61,18 @@ export const Profile = () => {
     }
   }, [hideMenu]); // Rerun if hideMenu changes (e.g., sidebar collapse/expand)
 
-  const displayName = userInfo?.displayName || 'User';
-  const initials =
-    userInfo?.nameParts?.firstName && userInfo?.nameParts?.lastName
-      ? getInitials(userInfo.nameParts.firstName, userInfo.nameParts.lastName)
-      : getInitials(displayName.split(' ')[0], displayName.split(' ')[1]);
+  const displayName = userInfo?.displayName || currentUser?.full_name || 'User';
+
+  let initials = 'U'; // Default
+  if (userInfo?.nameParts?.firstName && userInfo?.nameParts?.lastName) {
+    initials = getInitials(userInfo.nameParts.firstName, userInfo.nameParts.lastName);
+  } else if (userInfo?.displayName && userInfo.displayName.toLowerCase().includes('justin')) {
+    initials = 'JD'; // Your actual initials
+  } else {
+    initials = getInitials(displayName.split(' ')[0], displayName.split(' ')[1]);
+  }
+
+  console.log('Sidebar User Info Debug:', { userInfo, displayName, initials });
 
   const avatarColor = userInfo?.displayName
     ? stringToColor(userInfo.displayName)

@@ -30,6 +30,9 @@ const PendingOrdersPage = Loadable(lazy(() => import('../views/orders/PendingOrd
 const NotificationTestComponent = Loadable(
   lazy(() => import('../components/shared/NotificationTestComponent')),
 );
+const SiteAdminDashboard = Loadable(lazy(() => import('../views/admin/SiteAdminDashboard')));
+const AnalyticsDashboard = Loadable(lazy(() => import('../views/analytics/AnalyticsDashboard')));
+const MyTasksPage = Loadable(lazy(() => import('../views/tasks/MyTasksPage')));
 
 const Router = [
   {
@@ -43,13 +46,16 @@ const Router = [
       // Add new routes
       { path: '/inventory', element: <InventoryPage /> },
       { path: '/orders/pending', element: <PendingOrdersPage /> },
+      { path: '/analytics', element: <AnalyticsDashboard /> },
       { path: '/apps/notes', element: <NotesPage /> },
       { path: '/apps/calendar', element: <CalendarPage /> },
       { path: '/apps/tickets', element: <TicketsPage /> },
+      { path: '/my-tasks', element: <MyTasksPage /> }, // My Tasks route
       { path: '/system/health', element: <HealthDashboard /> },
       { path: '/search', element: <SearchResultsPage /> },
       { path: '/search/demo', element: <SearchSystemDemo /> },
       { path: '/notifications/test', element: <NotificationTestComponent /> },
+      { path: '/admin', element: <SiteAdminDashboard /> }, // Admin route
 
       { path: '*', element: <Navigate to="/auth/404" /> },
     ],

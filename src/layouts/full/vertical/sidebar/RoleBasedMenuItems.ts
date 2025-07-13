@@ -1,4 +1,5 @@
 import { uniqueId } from 'lodash';
+import { UserRole } from 'src/types/UserPermissions';
 
 interface MenuitemsType {
   [x: string]: any;
@@ -13,6 +14,9 @@ interface MenuitemsType {
   chipColor?: string;
   variant?: string;
   external?: boolean;
+  requiredRole?: UserRole; // Add role requirement
+  requiredRoles?: UserRole[]; // Allow multiple roles
+  adminOnly?: boolean; // Quick flag for admin-only items
 }
 
 // Import required icons from Tabler Icons
@@ -27,9 +31,10 @@ import {
   IconShoppingCart,   // For Pending Orders
   IconUserCog,        // For Admin Dashboard
   IconChartLine,      // For Analytics Dashboard
+  IconChecklist,      // For My Tasks
 } from '@tabler/icons-react';
 
-const Menuitems: MenuitemsType[] = [
+const BaseMenuItems: MenuitemsType[] = [
   {
     navlabel: true,
     subheader: 'Home',
@@ -52,8 +57,14 @@ const Menuitems: MenuitemsType[] = [
   },
   {
     id: uniqueId(),
+    title: 'My Tasks',
+    icon: IconChecklist,
+    href: '/my-tasks',
+  },
+  {
+    id: uniqueId(),
     title: 'Inventory',
-    icon: IconClipboardList, // Example icon
+    icon: IconClipboardList,
     href: '/inventory',
   },
   {
@@ -67,6 +78,7 @@ const Menuitems: MenuitemsType[] = [
     title: 'Analytics',
     icon: IconChartLine,
     href: '/analytics',
+    requiredRoles: ['Admin', 'ProjectManager'], // Allow Admin and Project Manager access
   },
   {
     navlabel: true,
@@ -99,13 +111,49 @@ const Menuitems: MenuitemsType[] = [
     title: 'Health Dashboard',
     icon: IconHeartbeat,
     href: '/system/health',
+    // Health Dashboard is available to everyone - no role restriction
   },
   {
     id: uniqueId(),
     title: 'Site Administration',
     icon: IconUserCog,
     href: '/admin',
+    adminOnly: true, // Only show to admins
   },
 ];
 
+// Function to filter menu items based on user role
+export const getMenuItemsForUser = (userRole?: UserRole): MenuitemsType[] => {
+  return BaseMenuItems.filter(item => {
+    // Always show nav labels and items without role restrictions
+    if (item.navlabel || (!item.requiredRole && !item.requiredRoles && !item.adminOnly)) {
+      return true;
+    }
+
+    // If no user role, only show public items
+    if (!userRole) {
+      return false;
+    }
+
+    // Check admin-only items
+    if (item.adminOnly && userRole !== 'Admin') {
+      return false;
+    }
+
+    // Check specific role requirement
+    if (item.requiredRole && userRole !== item.requiredRole) {
+      return false;
+    }
+
+    // Check multiple role requirements
+    if (item.requiredRoles && !item.requiredRoles.includes(userRole)) {
+      return false;
+    }
+
+    return true;
+  });
+};
+
+// Default export for backward compatibility
+const Menuitems = BaseMenuItems;
 export default Menuitems;

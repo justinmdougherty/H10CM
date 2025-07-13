@@ -18,6 +18,8 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -42,7 +44,12 @@ import {
   useGetProjectSteps,
 } from 'src/hooks/api/useProjectHooks';
 import { useTrackedItems } from 'src/hooks/api/useTrackedItemHooks';
+import { useRBAC } from '../../context/RBACContext';
 import AddProjectModal from '../dashboard/modals/AddProjectModal';
+import { useCreateTask, useUpdateTask, useTasks } from 'src/hooks/api/useTaskHooks';
+import EnhancedTaskManagementComponent from 'src/components/shared/EnhancedTaskManagementComponent';
+import { TaskItem, CreateTaskRequest } from 'src/types/Task';
+import { TeamMember } from 'src/types/User';
 
 // Enhanced status configuration with better colors and meanings
 const getStatusConfig = (status: ProjectStatus) => {
@@ -95,10 +102,17 @@ const getStatusConfig = (status: ProjectStatus) => {
 const BCrumb = [{ to: '/', title: 'Home' }, { title: 'Project Management' }];
 
 const ProjectManagementDashboard = () => {
+  const { currentUser, hasRole } = useRBAC();
   const { data: projects, isLoading, isError, error, refetch } = useGetProjects();
   const [addProjectModalOpen, setAddProjectModalOpen] = useState(false);
   const [statusMenuAnchorEl, setStatusMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState(0); // Add tab state for project filtering
+
+  // Task management hooks
+  const { data: currentTasks = [] } = useTasks();
+  const createTaskMutation = useCreateTask();
+  const updateTaskMutation = useUpdateTask();
 
   // Update project mutation
   const updateProjectMutation = useUpdateProject();
@@ -119,6 +133,10 @@ const ProjectManagementDashboard = () => {
   const handleRefreshClick = () => {
     console.log('🔄 Manual refresh triggered');
     refetch();
+  };
+
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
   };
 
   // Status menu handlers
@@ -213,6 +231,24 @@ const ProjectManagementDashboard = () => {
       })
     : [];
 
+  // Filter projects based on active tab
+  const getFilteredProjects = () => {
+    if (!sortedProjects) return [];
+
+    switch (activeTab) {
+      case 0: // Active & Planning
+        return sortedProjects.filter((p) => ['Active', 'Planning', 'On Hold'].includes(p.status));
+      case 1: // Completed
+        return sortedProjects.filter((p) => p.status === 'Completed');
+      case 2: // Inactive & Archived
+        return sortedProjects.filter((p) => ['Inactive', 'Archived'].includes(p.status));
+      default:
+        return sortedProjects;
+    }
+  };
+
+  const filteredProjects = getFilteredProjects();
+
   // Calculate overall statistics
   const totalProjects = projects?.length || 0;
   const activeProjects = projects?.filter((p) => p.status === 'Active').length || 0;
@@ -224,16 +260,25 @@ const ProjectManagementDashboard = () => {
       <Breadcrumb title="Project Management" items={BCrumb} />
 
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          Project Management Dashboard
-        </Typography>
+        <Box>
+          <Typography variant="h4" component="h1">
+            Project Management Dashboard
+          </Typography>
+          {currentUser && (
+            <Typography variant="body2" color="text.secondary">
+              Welcome back, {currentUser.full_name} ({currentUser.role})
+            </Typography>
+          )}
+        </Box>
         <Stack direction="row" spacing={1}>
           <IconButton onClick={handleRefreshClick} disabled={isLoading} title="Refresh projects">
             <RefreshIcon />
           </IconButton>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddProjectClick}>
-            Add New Project
-          </Button>
+          {hasRole('Admin') || hasRole('ProjectManager') ? (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddProjectClick}>
+              Add New Project
+            </Button>
+          ) : null}
         </Stack>
       </Stack>
 
@@ -295,48 +340,183 @@ const ProjectManagementDashboard = () => {
         </Grid>
       </Paper>
 
+      {/* Enhanced Task Management Section */}
+      <Box sx={{ mb: 4 }}>
+        <EnhancedTaskManagementComponent
+          teamMembers={
+            [
+              // Sample team members - this would come from your user management system
+              {
+                user_id: '1',
+                username: 'jsmith',
+                full_name: 'John Smith',
+                role: 'Production Technician',
+                status: 'Active',
+                availability_status: 'Available',
+                skills: ['Manufacturing', 'Quality Control', 'Assembly'],
+                current_task_count: 2,
+                productivity_score: 88,
+                last_active: new Date(),
+              },
+              {
+                user_id: '2',
+                username: 'sjohnson',
+                full_name: 'Sarah Johnson',
+                role: 'Production Manager',
+                status: 'Active',
+                availability_status: 'Available',
+                skills: ['Project Management', 'Scheduling', 'Quality Control'],
+                current_task_count: 4,
+                productivity_score: 94,
+                last_active: new Date(),
+              },
+              {
+                user_id: '3',
+                username: 'mrodriguez',
+                full_name: 'Miguel Rodriguez',
+                role: 'Quality Inspector',
+                status: 'Active',
+                availability_status: 'Busy',
+                skills: ['Quality Control', 'Testing', 'Documentation'],
+                current_task_count: 6,
+                productivity_score: 85,
+                last_active: new Date(),
+              },
+              {
+                user_id: '4',
+                username: 'alee',
+                full_name: 'Anna Lee',
+                role: 'Inventory Specialist',
+                status: 'Active',
+                availability_status: 'Available',
+                skills: ['Inventory Management', 'Procurement', 'Logistics'],
+                current_task_count: 1,
+                productivity_score: 91,
+                last_active: new Date(),
+              },
+            ] as TeamMember[]
+          }
+          onCreateTask={async (task: CreateTaskRequest) => {
+            try {
+              await createTaskMutation.mutateAsync(task);
+
+              // Find the assigned team member to get their name
+              const assignedMember = [
+                { user_id: '1', username: 'jsmith', full_name: 'John Smith' },
+                { user_id: '2', username: 'sjohnson', full_name: 'Sarah Johnson' },
+                { user_id: '3', username: 'mrodriguez', full_name: 'Miguel Rodriguez' },
+                { user_id: '4', username: 'alee', full_name: 'Anna Lee' },
+              ].find((member) => member.user_id === task.assigned_to);
+
+              // Show success notification with assignment details
+              const memberName = assignedMember?.full_name || task.assigned_to;
+              console.log(`✅ Task "${task.title}" successfully assigned to ${memberName}`);
+
+              // TODO: In a real implementation, this would:
+              // 1. Send an in-app notification to the assigned user
+              // 2. Send an email notification if configured
+              // 3. Add to the user's task queue in the database
+              // 4. Create a notification record for the user's notification center
+            } catch (error) {
+              console.error('Failed to create task:', error);
+              // Error notification could be added here
+            }
+          }}
+          onUpdateTask={async (taskId: string, updates: Partial<TaskItem>) => {
+            try {
+              await updateTaskMutation.mutateAsync({ taskId, updates });
+              // Success notification could be added here
+            } catch (error) {
+              console.error('Failed to update task:', error);
+              // Error notification could be added here
+            }
+          }}
+          currentTasks={currentTasks}
+        />
+      </Box>
+
       <Divider sx={{ my: 3 }} />
 
-      {/* Projects Grid */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h5" gutterBottom>
-          Active Projects
-        </Typography>
-      </Box>
+      {/* Projects Section with Tabs */}
+      <Paper sx={{ mb: 3 }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            variant="fullWidth"
+            aria-label="project status tabs"
+          >
+            <Tab
+              label={`Active & Planning (${
+                projects?.filter((p) => ['Active', 'Planning', 'On Hold'].includes(p.status))
+                  .length || 0
+              })`}
+              icon={<ActiveIcon />}
+              iconPosition="start"
+            />
+            <Tab
+              label={`Completed (${projects?.filter((p) => p.status === 'Completed').length || 0})`}
+              icon={<CompletedIcon />}
+              iconPosition="start"
+            />
+            <Tab
+              label={`Inactive & Archived (${
+                projects?.filter((p) => ['Inactive', 'Archived'].includes(p.status)).length || 0
+              })`}
+              icon={<ArchivedIcon />}
+              iconPosition="start"
+            />
+          </Tabs>
+        </Box>
 
-      <Box>
-        <Grid container spacing={3}>
-          {sortedProjects && sortedProjects.length > 0 ? (
-            sortedProjects.map((project) => (
-              <ProjectCard
-                key={project.project_id}
-                project={project}
-                onStatusMenuClick={handleStatusMenuClick}
-              />
-            ))
-          ) : (
-            <Grid item xs={12}>
-              <Box
-                display="flex"
-                flexDirection="column"
-                alignItems="center"
-                justifyContent="center"
-                sx={{ minHeight: '200px', textAlign: 'center' }}
-              >
-                <Typography variant="h6" color="text.secondary" gutterBottom>
-                  No Projects Found
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Create your first project to get started.
-                </Typography>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddProjectClick}>
-                  Create Your First Project
-                </Button>
-              </Box>
-            </Grid>
-          )}
-        </Grid>
-      </Box>
+        <Box sx={{ p: 3 }}>
+          <Grid container spacing={3}>
+            {filteredProjects && filteredProjects.length > 0 ? (
+              filteredProjects.map((project) => (
+                <ProjectCard
+                  key={project.project_id}
+                  project={project}
+                  onStatusMenuClick={handleStatusMenuClick}
+                />
+              ))
+            ) : (
+              <Grid item xs={12}>
+                <Box
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                  justifyContent="center"
+                  sx={{ minHeight: '200px', textAlign: 'center' }}
+                >
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    {activeTab === 0
+                      ? 'No Active Projects'
+                      : activeTab === 1
+                      ? 'No Completed Projects'
+                      : 'No Inactive or Archived Projects'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    {activeTab === 0
+                      ? 'Create your first project to get started.'
+                      : activeTab === 1
+                      ? 'Complete some projects to see them here.'
+                      : 'Projects moved to inactive or archived will appear here.'}
+                  </Typography>
+                  {activeTab === 0 && (
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={handleAddProjectClick}
+                    >
+                      Create Your First Project
+                    </Button>
+                  )}
+                </Box>
+              </Grid>
+            )}
+          </Grid>
+        </Box>
+      </Paper>
 
       {/* Status Change Menu */}
       <Menu

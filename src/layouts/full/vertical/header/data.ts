@@ -3,8 +3,6 @@ import img2 from 'src/assets/images/profile/user-2.jpg';
 import img3 from 'src/assets/images/profile/user-3.jpg';
 import img4 from 'src/assets/images/profile/user-4.jpg';
 
-import icon1 from 'src/assets/images/svgs/icon-account.svg'
-import icon2 from 'src/assets/images/svgs/icon-inbox.svg'
 import icon3 from 'src/assets/images/svgs/icon-tasks.svg'
 
 import ddIcon1 from 'src/assets/images/svgs/icon-dd-chat.svg'
@@ -119,19 +117,7 @@ interface ProfileType {
 }
 const profile: ProfileType[] = [
   {
-    href: '/',
-    title: 'My Profile',
-    subtitle: 'Account Settings',
-    icon: icon1,
-  },
-  {
-    href: '/',
-    title: 'My Inbox',
-    subtitle: 'Messages & Emails',
-    icon: icon2,
-  },
-  {
-    href: '/',
+    href: '/my-tasks',
     title: 'My Tasks',
     subtitle: 'To-do and Daily Tasks',
     icon: icon3,

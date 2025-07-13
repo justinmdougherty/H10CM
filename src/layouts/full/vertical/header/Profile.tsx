@@ -1,34 +1,70 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router';
-import {
-  Box,
-  Menu,
-  Avatar,
-  Typography,
-  Divider,
-  Button,
-  IconButton,
-  Stack
-} from '@mui/material';
+import { Box, Menu, Avatar, Typography, Divider, IconButton, Stack } from '@mui/material';
 import * as dropdownData from './data';
+import { useRBAC } from 'src/context/RBACContext';
+import certificateService, { UserAuthInfo } from 'src/services/certificateService';
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import { IconMail } from '@tabler/icons-react';
-
-import ProfileImg from 'src/assets/images/profile/user-1.jpg';
-import unlimitedImg from 'src/assets/images/backgrounds/unlimited-bg.png';
+// Helper function to generate user initials
+const getUserInitials = (fullName: string): string => {
+  return fullName
+    .split(' ')
+    .map((name) => name.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join('');
+};
 
 const Profile = () => {
   const [anchorEl2, setAnchorEl2] = useState(null);
+  const [userInfo, setUserInfo] = useState<UserAuthInfo | null>(null);
+  const { currentUser } = useRBAC();
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const certUser = await certificateService.getCurrentUser();
+        setUserInfo(certUser);
+        console.log('Certificate user info:', certUser);
+      } catch (error) {
+        console.error('Failed to fetch certificate user info:', error);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
+
   const handleClick2 = (event: any) => {
     setAnchorEl2(event.currentTarget);
   };
   const handleClose2 = () => {
     setAnchorEl2(null);
   };
+
+  // Get user display information - prioritize certificate data
+  const userName = userInfo?.displayName || currentUser?.full_name || 'Guest User';
+  const userRole = currentUser?.role || 'Guest';
+
+  // Get initials from certificate service first, then fallback
+  let userInitials = 'GU'; // Default
+  if (userInfo?.nameParts?.firstName && userInfo?.nameParts?.lastName) {
+    userInitials = `${userInfo.nameParts.firstName.charAt(0)}${userInfo.nameParts.lastName.charAt(
+      0,
+    )}`.toUpperCase();
+  } else if (userInfo?.displayName) {
+    // Try to extract from displayName if it contains "Justin"
+    if (userInfo.displayName.toLowerCase().includes('justin')) {
+      userInitials = 'JD'; // Your actual initials
+    } else {
+      userInitials = getUserInitials(userInfo.displayName);
+    }
+  } else {
+    userInitials = getUserInitials(userName);
+  }
+
+  // Log for debugging
+  console.log('User Info Debug:', { userInfo, userName, userInitials });
 
   return (
     <Box>
@@ -46,13 +82,17 @@ const Profile = () => {
         onClick={handleClick2}
       >
         <Avatar
-          src={ProfileImg}
-          alt={ProfileImg}
           sx={{
             width: 35,
             height: 35,
+            bgcolor: 'primary.main',
+            color: 'white',
+            fontWeight: 600,
+            fontSize: '14px',
           }}
-        />
+        >
+          {userInitials}
+        </Avatar>
       </IconButton>
       {/* ------------------------------------------- */}
       {/* Message Dropdown */}
@@ -74,23 +114,24 @@ const Profile = () => {
       >
         <Typography variant="h5">User Profile</Typography>
         <Stack direction="row" py={3} spacing={2} alignItems="center">
-          <Avatar src={ProfileImg} alt={ProfileImg} sx={{ width: 95, height: 95 }} />
+          <Avatar
+            sx={{
+              width: 95,
+              height: 95,
+              bgcolor: 'primary.main',
+              color: 'white',
+              fontWeight: 600,
+              fontSize: '32px',
+            }}
+          >
+            {userInitials}
+          </Avatar>
           <Box>
             <Typography variant="subtitle2" color="textPrimary" fontWeight={600}>
-              Mathew Anderson
+              {userName}
             </Typography>
             <Typography variant="subtitle2" color="textSecondary">
-              Designer
-            </Typography>
-            <Typography
-              variant="subtitle2"
-              color="textSecondary"
-              display="flex"
-              alignItems="center"
-              gap={1}
-            >
-              <IconMail width={15} height={15} />
-              info@modernize.com
+              {userRole}
             </Typography>
           </Box>
         </Stack>
@@ -147,25 +188,6 @@ const Profile = () => {
             </Box>
           </Box>
         ))}
-        <Box mt={2}>
-          <Box bgcolor="primary.light" p={3} mb={3} overflow="hidden" position="relative">
-            <Box display="flex" justifyContent="space-between">
-              <Box>
-                <Typography variant="h5" mb={2}>
-                  Unlimited <br />
-                  Access
-                </Typography>
-                <Button variant="contained" color="primary">
-                  Upgrade
-                </Button>
-              </Box>
-              <img src={unlimitedImg} alt="unlimited" className="signup-bg"></img>
-            </Box>
-          </Box>
-          <Button to="auth/login" variant="outlined" color="primary" component={Link} fullWidth>
-            Logout
-          </Button>
-        </Box>
       </Menu>
     </Box>
   );
