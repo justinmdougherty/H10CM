@@ -22,13 +22,10 @@ import {
 } from '@mui/icons-material';
 import PageContainer from 'src/components/container/PageContainer';
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
-import ProgramHeader from 'src/components/shared/ProgramHeader';
-import ProgramStatusCard from 'src/components/shared/ProgramStatusCard';
 import { Link } from 'react-router'; // Using react-router-dom is standard for modern React apps with Vite
 import { ProjectStatus } from 'src/types/Project';
 import { useGetProjects, useGetProjectSteps } from 'src/hooks/api/useProjectHooks';
 import { useTrackedItems } from 'src/hooks/api/useTrackedItemHooks';
-import { useProgram } from 'src/context/ProgramContext';
 
 // Enhanced status configuration with better colors and meanings
 const getStatusConfig = (status: ProjectStatus) => {
@@ -166,7 +163,6 @@ const ProjectProgressInfo = ({ projectId }: { projectId: string }) => {
 const BCrumb = [{ to: '/', title: 'Home' }, { title: 'Production Dashboard' }];
 
 const ProjectsDashboardPage = () => {
-  const { currentProgram } = useProgram();
   const { data: projects, isLoading, isError, error, refetch } = useGetProjects();
 
   const handleRefreshClick = () => {
@@ -235,18 +231,14 @@ const ProjectsDashboardPage = () => {
       description="Select a project to begin production work"
     >
       <Breadcrumb title="Production Dashboard" items={BCrumb} />
-      <ProgramHeader />
-      <ProgramStatusCard />
 
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
         <Box>
           <Typography variant="h4" component="h1">
-            {currentProgram ? `${currentProgram.program_name} Projects` : 'Active Projects'}
+            Active Projects
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {currentProgram
-              ? `Project tracking for ${currentProgram.program_name} (${currentProgram.program_code})`
-              : 'Select an active or on-hold project to begin tracking'}
+            Select an active or on-hold project to begin production tracking
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>

@@ -32,7 +32,15 @@ interface LoginComponentProps {
 }
 
 const LoginComponent: React.FC<LoginComponentProps> = ({ onLoginSuccess }) => {
-  const { currentUser, isAuthenticated, isLoading, loginWithCertificate, loginAsUser } = useRBAC();
+  const {
+    currentUser,
+    isAuthenticated,
+    isLoading,
+    loginWithCertificate,
+    loginAsUser,
+    requestAccess,
+    getAllUsers,
+  } = useRBAC();
 
   const [loginMode, setLoginMode] = useState<'certificate' | 'development' | 'register'>(
     'certificate',
@@ -61,99 +69,39 @@ const LoginComponent: React.FC<LoginComponentProps> = ({ onLoginSuccess }) => {
         const mockUsers: UserProfile[] = [
           {
             user_id: 'admin-001',
-            email: 'admin@example.com',
+            email: 'admin@tfproject.com',
             full_name: 'System Administrator',
             role: 'Admin',
             status: 'Active',
             created_date: new Date('2024-01-01'),
             permissions: [],
-            program_access: [
-              {
-                program_id: 'tf',
-                program_name: 'Default Program',
-                user_role: 'Admin',
-                access_level: 'Admin',
-                granted_date: new Date('2024-01-01'),
-                granted_by: 'system',
-                project_assignments: [],
-              },
-            ],
-            accessible_programs: ['tf'],
-            accessible_projects: ['*'],
-            can_see_all_programs: true,
-            can_create_programs: true,
           },
           {
             user_id: 'pm-001',
-            email: 'pm@example.com',
+            email: 'pm@tfproject.com',
             full_name: 'Project Manager',
             role: 'ProjectManager',
             status: 'Active',
             created_date: new Date('2024-01-15'),
             permissions: [],
-            program_access: [
-              {
-                program_id: 'tf',
-                program_name: 'Default Program',
-                user_role: 'ProjectManager',
-                access_level: 'Program',
-                granted_date: new Date('2024-01-15'),
-                granted_by: 'admin-001',
-                project_assignments: [],
-              },
-            ],
-            accessible_programs: ['tf'],
-            accessible_projects: ['proj-001', 'proj-002'],
-            can_see_all_programs: false,
-            can_create_programs: false,
           },
           {
             user_id: 'tech-001',
-            email: 'tech@example.com',
+            email: 'tech@tfproject.com',
             full_name: 'Lead Technician',
             role: 'Technician',
             status: 'Active',
             created_date: new Date('2024-02-01'),
             permissions: [],
-            program_access: [
-              {
-                program_id: 'tf',
-                program_name: 'Default Program',
-                user_role: 'Technician',
-                access_level: 'Limited',
-                granted_date: new Date('2024-02-01'),
-                granted_by: 'pm-001',
-                project_assignments: [],
-              },
-            ],
-            accessible_programs: ['tf'],
-            accessible_projects: ['proj-001'],
-            can_see_all_programs: false,
-            can_create_programs: false,
           },
           {
             user_id: 'visitor-001',
-            email: 'visitor@example.com',
+            email: 'visitor@tfproject.com',
             full_name: 'Guest User',
             role: 'Visitor',
             status: 'Active',
             created_date: new Date('2024-02-15'),
             permissions: [],
-            program_access: [
-              {
-                program_id: 'tf',
-                program_name: 'Default Program',
-                user_role: 'Visitor',
-                access_level: 'Limited',
-                granted_date: new Date('2024-02-15'),
-                granted_by: 'admin-001',
-                project_assignments: [],
-              },
-            ],
-            accessible_programs: ['tf'],
-            accessible_projects: [],
-            can_see_all_programs: false,
-            can_create_programs: false,
           },
         ];
         setAvailableUsers(mockUsers);
@@ -227,16 +175,15 @@ const LoginComponent: React.FC<LoginComponentProps> = ({ onLoginSuccess }) => {
     setMessage(null);
 
     try {
-      // Access request functionality temporarily disabled
-      // await requestAccess(
-      //   registrationForm.email,
-      //   registrationForm.fullName,
-      //   registrationForm.requestedRole,
-      //   registrationForm.justification,
-      // );
+      await requestAccess(
+        registrationForm.email,
+        registrationForm.fullName,
+        registrationForm.requestedRole,
+        registrationForm.justification,
+      );
       setMessage({
         type: 'success',
-        text: 'Access request submitted successfully. Please contact an administrator for approval.',
+        text: 'Access request submitted successfully! An administrator will review your request.',
       });
       setRegistrationForm({
         email: '',
@@ -305,7 +252,7 @@ const LoginComponent: React.FC<LoginComponentProps> = ({ onLoginSuccess }) => {
         <Box sx={{ textAlign: 'center', mb: 3 }}>
           <SecurityIcon sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
           <Typography variant="h5" component="h1">
-            Project Access
+            TF Project Access
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Please authenticate to access the system
@@ -406,7 +353,7 @@ const LoginComponent: React.FC<LoginComponentProps> = ({ onLoginSuccess }) => {
         {loginMode === 'register' && (
           <Stack spacing={2}>
             <Typography variant="body2">
-              Request access to the Project system. An administrator will review your request.
+              Request access to the TF Project system. An administrator will review your request.
             </Typography>
 
             <Grid container spacing={2}>
@@ -485,7 +432,7 @@ const LoginComponent: React.FC<LoginComponentProps> = ({ onLoginSuccess }) => {
           color="text.secondary"
           sx={{ textAlign: 'center', display: 'block' }}
         >
-          Project Management System - Secure Access Required
+          TF Project Management System - Secure Access Required
         </Typography>
       </CardContent>
     </Card>

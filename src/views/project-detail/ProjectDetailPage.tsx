@@ -132,7 +132,7 @@ const ProjectDetailPage = () => {
   return (
     <PageContainer
       title={`Project: ${project.project_name}`}
-      description={`Project tracking for project ${project.project_name}`}
+      description={`Production tracking for project ${project.project_name}`}
     >
       <Breadcrumb title={project.project_name} items={BCrumb} />
 
