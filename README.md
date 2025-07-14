@@ -41,27 +41,63 @@ Run all terminal commands with PowerShell
 
 npx tsc --noEmit --skipLibCheck
 
-# H10CM - Production Management & Inventory Tracking App
+# H10CM - Multi-Tenant Production Management Platform
 
-**Multi-tenant web application using React and TypeScript for production management and inventory tracking. The application is styled using Material UI and communicates with a Node.js/Express API backed by an MSSQL database.**
+**Complete multi-tenant enterprise platform combining frontend React application and backend Node.js API for production management, inventory tracking, and business operations. Features enterprise-grade security, role-based access control, and complete business workflow management.**
 
-*This project was bootstrapped from the "Modernize - React and Next.js Admin Dashboard" template (Vite + TypeScript version, starterkit).*
+*Consolidated repository containing both frontend (React/TypeScript) and backend (Node.js/Express) components with shared documentation and unified development workflow.*
+
+## 🏗️ Repository Structure
+
+```
+H10CM/
+├── src/                    # Frontend React Application
+│   ├── components/         # React components
+│   ├── services/          # Frontend API services
+│   ├── context/           # React contexts (RBAC, Program, etc.)
+│   └── views/             # Page components
+├── api/                   # Backend Node.js API
+│   ├── index.js           # Main API server
+│   ├── h10cm_api.js       # Multi-tenant API logic
+│   ├── create-dev-user.js # Development user setup
+│   └── package.json       # API dependencies
+├── database/              # SQL scripts and schema (from api/)
+├── package.json           # Frontend dependencies
+└── README.md              # This file - unified documentation
+```
 
 ## 🚀 Quick Start
 
+### **Frontend Development**
 ```bash
-# Navigate to project directory
-cd H10CM
-
-# Install dependencies
+# Install frontend dependencies
 npm install
 
-# Start development server
+# Start frontend development server
 npm run dev
-# Application available at http://localhost:5173
+# Frontend available at http://localhost:5173
+```
 
-# Run tests
-npm test
+### **Backend API**
+```bash
+# Navigate to API directory
+cd api
+
+# Install API dependencies
+npm install
+
+# Start API server
+npm start
+# API available at http://localhost:3000
+```
+
+### **Full Stack Development**
+```bash
+# Terminal 1: Start API
+cd api && npm start
+
+# Terminal 2: Start Frontend
+npm run dev
 ```
 
 ## ✅ Completed Features
