@@ -19,12 +19,14 @@ import {
   Settings as SettingsIcon,
   Analytics as AnalyticsIcon,
   Notifications as NotificationIcon,
+  Build as SetupIcon,
 } from '@mui/icons-material';
 import PageContainer from 'src/components/container/PageContainer';
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
 import { useRBAC } from '../../context/RBACContext';
 import UserManagementDashboard from '../../components/admin/UserManagementDashboard';
 import LoginComponent from '../../components/auth/LoginComponent';
+import SystemSetup from '../../components/admin/SystemSetup';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -58,9 +60,6 @@ const SiteAdminDashboard: React.FC = () => {
     getPendingAccessRequests,
     approveUserAccess,
     denyUserAccess,
-    updateUserRole,
-    suspendUser,
-    activateUser,
     hasRole,
   } = useRBAC();
 
@@ -259,8 +258,8 @@ const SiteAdminDashboard: React.FC = () => {
               }
               icon={<UsersIcon />}
             />
+            <Tab label="System Setup" icon={<SettingsIcon />} />
             <Tab label="System Security" icon={<SecurityIcon />} />
-            <Tab label="System Settings" icon={<SettingsIcon />} />
             <Tab label="Analytics" icon={<AnalyticsIcon />} />
           </Tabs>
         </Box>
@@ -293,22 +292,16 @@ const SiteAdminDashboard: React.FC = () => {
                 setPendingRequests(requests);
               }}
               onUpdateUserRole={async (userId, newRole) => {
-                await updateUserRole(userId, newRole);
-                // Reload data
-                const users = await getAllUsers();
-                setAllUsers(users);
+                // TODO: Implement updateUserRole in context
+                console.log('Update user role:', userId, newRole);
               }}
               onSuspendUser={async (userId, reason) => {
-                await suspendUser(userId, reason);
-                // Reload data
-                const users = await getAllUsers();
-                setAllUsers(users);
+                // TODO: Implement suspendUser in context
+                console.log('Suspend user:', userId, reason);
               }}
               onActivateUser={async (userId) => {
-                await activateUser(userId);
-                // Reload data
-                const users = await getAllUsers();
-                setAllUsers(users);
+                // TODO: Implement activateUser in context
+                console.log('Activate user:', userId);
               }}
               onUpdateUserPermissions={async (userId, permissions) => {
                 // Implement if needed
@@ -318,8 +311,13 @@ const SiteAdminDashboard: React.FC = () => {
           )}
         </TabPanel>
 
-        {/* System Security Tab */}
+        {/* System Setup Tab */}
         <TabPanel value={currentTab} index={1}>
+          <SystemSetup />
+        </TabPanel>
+
+        {/* System Security Tab */}
+        <TabPanel value={currentTab} index={2}>
           <Typography variant="h6" gutterBottom>
             System Security
           </Typography>
@@ -355,16 +353,6 @@ const SiteAdminDashboard: React.FC = () => {
               </Card>
             </Grid>
           </Grid>
-        </TabPanel>
-
-        {/* System Settings Tab */}
-        <TabPanel value={currentTab} index={2}>
-          <Typography variant="h6" gutterBottom>
-            System Settings
-          </Typography>
-          <Alert severity="info">
-            System settings configuration will be available in a future update.
-          </Alert>
         </TabPanel>
 
         {/* Analytics Tab */}

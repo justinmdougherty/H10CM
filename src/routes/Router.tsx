@@ -1,8 +1,9 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import React, { lazy } from 'react';
-import { createBrowserRouter, Navigate } from 'react-router';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router';
 import Loadable from '../layouts/full/shared/loadable/Loadable';
+import { ProgramProvider } from '../context/ProgramContext';
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -34,38 +35,51 @@ const SiteAdminDashboard = Loadable(lazy(() => import('../views/admin/SiteAdminD
 const AnalyticsDashboard = Loadable(lazy(() => import('../views/analytics/AnalyticsDashboard')));
 const MyTasksPage = Loadable(lazy(() => import('../views/tasks/MyTasksPage')));
 
+// Program-aware wrapper component
+const ProgramAwareLayout = () => (
+  <ProgramProvider>
+    <Outlet />
+  </ProgramProvider>
+);
+
 const Router = [
   {
     path: '/',
-    element: <FullLayout />,
+    element: <ProgramAwareLayout />,
     children: [
-      { path: '/', element: <Navigate to="/dashboard" /> },
-      { path: '/dashboard', exact: true, element: <ProjectsDashboardPage /> },
-      { path: '/project-management', element: <ProjectManagementDashboard /> },
-      { path: '/project/:projectId', element: <ProjectDetailPage /> },
-      // Add new routes
-      { path: '/inventory', element: <InventoryPage /> },
-      { path: '/orders/pending', element: <PendingOrdersPage /> },
-      { path: '/analytics', element: <AnalyticsDashboard /> },
-      { path: '/apps/notes', element: <NotesPage /> },
-      { path: '/apps/calendar', element: <CalendarPage /> },
-      { path: '/apps/tickets', element: <TicketsPage /> },
-      { path: '/my-tasks', element: <MyTasksPage /> }, // My Tasks route
-      { path: '/system/health', element: <HealthDashboard /> },
-      { path: '/search', element: <SearchResultsPage /> },
-      { path: '/search/demo', element: <SearchSystemDemo /> },
-      { path: '/notifications/test', element: <NotificationTestComponent /> },
-      { path: '/admin', element: <SiteAdminDashboard /> }, // Admin route
+      {
+        path: '/',
+        element: <FullLayout />,
+        children: [
+          { path: '/', element: <Navigate to="/dashboard" /> },
+          { path: '/dashboard', exact: true, element: <ProjectsDashboardPage /> },
+          { path: '/project-management', element: <ProjectManagementDashboard /> },
+          { path: '/project/:projectId', element: <ProjectDetailPage /> },
+          // Add new routes
+          { path: '/inventory', element: <InventoryPage /> },
+          { path: '/orders/pending', element: <PendingOrdersPage /> },
+          { path: '/analytics', element: <AnalyticsDashboard /> },
+          { path: '/apps/notes', element: <NotesPage /> },
+          { path: '/apps/calendar', element: <CalendarPage /> },
+          { path: '/apps/tickets', element: <TicketsPage /> },
+          { path: '/my-tasks', element: <MyTasksPage /> }, // My Tasks route
+          { path: '/system/health', element: <HealthDashboard /> },
+          { path: '/search', element: <SearchResultsPage /> },
+          { path: '/search/demo', element: <SearchSystemDemo /> },
+          { path: '/notifications/test', element: <NotificationTestComponent /> },
+          { path: '/admin', element: <SiteAdminDashboard /> }, // Admin route
 
-      { path: '*', element: <Navigate to="/auth/404" /> },
-    ],
-  },
-  {
-    path: '/auth',
-    element: <BlankLayout />,
-    children: [
-      { path: '404', element: <Error /> },
-      { path: '*', element: <Navigate to="/auth/404" /> },
+          { path: '*', element: <Navigate to="/auth/404" /> },
+        ],
+      },
+      {
+        path: '/auth',
+        element: <BlankLayout />,
+        children: [
+          { path: '404', element: <Error /> },
+          { path: '*', element: <Navigate to="/auth/404" /> },
+        ],
+      },
     ],
   },
 ];

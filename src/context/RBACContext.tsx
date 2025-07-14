@@ -6,13 +6,7 @@ import {
   DEFAULT_ROLE_PERMISSIONS,
   UserAccessRequest,
 } from '../types/UserPermissions';
-import {
-  ProgramAccess,
-  AccessRequest,
-  AccessResult,
-  Program,
-  ProjectAccess,
-} from '../types/ProgramAccess';
+import { Program, AccessRequest, AccessResult } from '../types/ProgramAccess';
 
 interface RBACContextType {
   currentUser: UserProfile | null;
@@ -179,7 +173,7 @@ const mockPendingRequests: UserAccessRequest[] = [
     email: 'newuser@tfproject.com',
     full_name: 'New User',
     requested_role: 'Technician',
-    justification: 'Need access to production tracking for quality control work',
+    justification: 'Need access to project tracking for quality control work',
     requested_date: new Date(Date.now() - 86400000),
     status: 'pending',
   },
@@ -192,7 +186,7 @@ export const RBACProvider: React.FC<RBACProviderProps> = ({ children }) => {
   const [allUsers, setAllUsers] = useState<UserProfile[]>(mockUsers);
   const [pendingRequests, setPendingRequests] = useState<UserAccessRequest[]>(mockPendingRequests);
   const [currentProgram, setCurrentProgram] = useState<string | null>(null);
-  const [availablePrograms, setAvailablePrograms] = useState<Program[]>([]);
+  const [availablePrograms] = useState<Program[]>([]);
 
   // Initialize authentication state
   useEffect(() => {
@@ -443,6 +437,11 @@ export const RBACProvider: React.FC<RBACProviderProps> = ({ children }) => {
         created_date: new Date(),
         has_certificate: false,
         permissions: DEFAULT_ROLE_PERMISSIONS.find((r) => r.role === role)?.permissions || [],
+        program_access: [],
+        accessible_programs: [],
+        accessible_projects: [],
+        can_see_all_programs: false,
+        can_create_programs: false,
       };
 
       // Add to users list and remove from pending
@@ -470,34 +469,38 @@ export const RBACProvider: React.FC<RBACProviderProps> = ({ children }) => {
     }
   };
 
-  // Program/Project management methods (Admin/ProgramAdmin only)
+  // Program/Project management methods (Admin only)
   const getAllPrograms = async (): Promise<Program[]> => {
-    if (!hasRole('Admin') && !hasRole('ProgramAdmin')) {
-      throw new Error('Access denied: Admin or ProgramAdmin role required');
+    if (!hasRole('Admin')) {
+      throw new Error('Access denied: Admin role required');
     }
     // For now, return mock data
     return [
       {
         program_id: 'program-001',
-        name: 'Program 1',
+        program_name: 'Program 1',
+        program_code: 'PROG1',
         description: 'First program',
-        start_date: new Date('2024-01-01'),
-        end_date: new Date('2024-12-31'),
-        status: 'Active',
-        created_by: 'admin-001',
+        status: 'Active' as const,
         created_date: new Date(),
-        modified_date: new Date(),
+        last_modified: new Date(),
+        settings: {
+          allow_cross_project_visibility: true,
+          require_project_assignment: false,
+        },
       },
       {
         program_id: 'program-002',
-        name: 'Program 2',
+        program_name: 'Program 2',
+        program_code: 'PROG2',
         description: 'Second program',
-        start_date: new Date('2024-02-01'),
-        end_date: new Date('2024-11-30'),
-        status: 'Active',
-        created_by: 'admin-001',
+        status: 'Active' as const,
         created_date: new Date(),
-        modified_date: new Date(),
+        last_modified: new Date(),
+        settings: {
+          allow_cross_project_visibility: false,
+          require_project_assignment: true,
+        },
       },
     ];
   };
@@ -508,8 +511,8 @@ export const RBACProvider: React.FC<RBACProviderProps> = ({ children }) => {
     role: UserRole,
     accessLevel: string,
   ): Promise<void> => {
-    if (!hasRole('Admin') && !hasRole('ProgramAdmin')) {
-      throw new Error('Access denied: Admin or ProgramAdmin role required');
+    if (!hasRole('Admin')) {
+      throw new Error('Access denied: Admin role required');
     }
 
     // Mock implementation - in reality, this would update the user and program data
@@ -522,8 +525,8 @@ export const RBACProvider: React.FC<RBACProviderProps> = ({ children }) => {
     role: UserRole,
     accessLevel: string,
   ): Promise<void> => {
-    if (!hasRole('Admin') && !hasRole('ProjectAdmin')) {
-      throw new Error('Access denied: Admin or ProjectAdmin role required');
+    if (!hasRole('Admin') && !hasRole('ProjectManager')) {
+      throw new Error('Access denied: Admin or ProjectManager role required');
     }
 
     // Mock implementation - in reality, this would update the user and project data
@@ -531,8 +534,8 @@ export const RBACProvider: React.FC<RBACProviderProps> = ({ children }) => {
   };
 
   const removeUserFromProgram = async (userId: string, programId: string): Promise<void> => {
-    if (!hasRole('Admin') && !hasRole('ProgramAdmin')) {
-      throw new Error('Access denied: Admin or ProgramAdmin role required');
+    if (!hasRole('Admin')) {
+      throw new Error('Access denied: Admin role required');
     }
 
     // Mock implementation - in reality, this would update the user and program data
@@ -540,8 +543,8 @@ export const RBACProvider: React.FC<RBACProviderProps> = ({ children }) => {
   };
 
   const removeUserFromProject = async (userId: string, projectId: string): Promise<void> => {
-    if (!hasRole('Admin') && !hasRole('ProjectAdmin')) {
-      throw new Error('Access denied: Admin or ProjectAdmin role required');
+    if (!hasRole('Admin') && !hasRole('ProjectManager')) {
+      throw new Error('Access denied: Admin or ProjectManager role required');
     }
 
     // Mock implementation - in reality, this would update the user and project data
@@ -549,32 +552,6 @@ export const RBACProvider: React.FC<RBACProviderProps> = ({ children }) => {
   };
 
   // Self-service registration
-  const requestAccess = async (
-    email: string,
-    fullName: string,
-    requestedRole: UserRole,
-    justification?: string,
-  ): Promise<void> => {
-    try {
-      const newRequest: UserAccessRequest = {
-        request_id: `req-${Date.now()}`,
-        user_id: `user-${Date.now()}`,
-        email,
-        full_name: fullName,
-        requested_role: requestedRole,
-        justification,
-        requested_date: new Date(),
-        status: 'pending',
-      };
-
-      setPendingRequests((prev) => [...prev, newRequest]);
-      console.log(`Access request submitted for ${fullName} (${email})`);
-    } catch (error) {
-      console.error('Error submitting access request:', error);
-      throw error;
-    }
-  };
-
   const contextValue: RBACContextType = {
     currentUser,
     isAuthenticated,
@@ -615,9 +592,6 @@ export const RBACProvider: React.FC<RBACProviderProps> = ({ children }) => {
     assignUserToProject,
     removeUserFromProgram,
     removeUserFromProject,
-
-    // Self-service
-    requestAccess,
   };
 
   return <RBACContext.Provider value={contextValue}>{children}</RBACContext.Provider>;
